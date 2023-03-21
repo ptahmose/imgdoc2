@@ -21,7 +21,7 @@ static shared_ptr<IDoc> CreateCheckerboard3dDocument(bool use_spatial_index)
     const auto create_options = ClassFactory::CreateCreateOptionsUp();
     create_options->SetDocumentType(DocumentType::kImage3d);
     create_options->SetFilename(":memory:");
-    //create_options->SetFilename("d:\\test.db");
+    //create_options->SetFilename("N:\\out\\10x10x10_bricks.db");
     create_options->AddDimension('M');
     create_options->SetUseSpatialIndex(use_spatial_index);
     create_options->SetCreateBlobTable(true);

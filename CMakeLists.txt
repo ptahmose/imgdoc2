@@ -50,6 +50,8 @@ option(IMGDOC2_BUILD_CONVCZI "Whether to build the convczi-tool" ON)
 
 add_subdirectory(external/sqlite3)
 
+add_subdirectory(libSqliteExtension)
+add_subdirectory(imgdoc2sqliteextension)
 add_subdirectory(libimgdoc2)
 add_subdirectory(imgdoc2API)
 add_subdirectory(imgdoc2cmd)
