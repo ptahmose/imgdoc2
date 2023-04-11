@@ -738,3 +738,28 @@ TEST(Metadata, DeleteItemForPathDeleteRoot)
     // we expect that all nodes have been deleted, which are 6 altogether (A, B, C, D, E, F)
     EXPECT_EQ(number_of_nodes_deleted, 6);
 }
+
+TEST(Metadata, ConstructDeepMetadataHierarchyAndDeleteAllItems)
+{
+    // Arrange
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_writer = doc->GetDocumentMetadataWriter();
+
+    metadata_writer->UpdateOrCreateItemForPath(
+        true,
+        true,
+        "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z",
+        DocumentMetadataType::Text,
+        IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+
+    // Act
+    const auto     number_of_nodes_deleted = metadata_writer->DeleteItemForPath("", true);
+
+    // Assert
+
+    // we expect that all nodes have been deleted, which are 26 altogether (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z)
+    EXPECT_EQ(number_of_nodes_deleted, 26);
+}
