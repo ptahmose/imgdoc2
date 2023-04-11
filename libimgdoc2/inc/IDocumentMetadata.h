@@ -14,11 +14,16 @@
 
 namespace imgdoc2
 {
-
+    /// Values that represent the type of a document metadata item.
     enum class DocumentMetadataType : std::uint8_t
     {
-        Invalid = 0,
+        Invalid = 0,        ///< An enum constant representing the invalid option. This value is not legal for any call into the document metadata API.
+
+        /// An enum constant representing the default option.Default means that the type is determined from the value variant.
+        /// The mapping is as follows: If the value variant is std::monostate, the type is set to Invalid. If the value variant is a string, the type is set to Text. 
+        /// If the value variant is int32_t, the type is set to Int32. If the value variant is double, the type is set to Double. 
         Default,
+
         Null,
         Text,
         Int32,
@@ -31,6 +36,13 @@ namespace imgdoc2
     {
     public:
         typedef std::variant<std::string, std::int32_t, double, std::monostate> metadata_item_variant;
+
+        // no copy and no move (-> https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#c21-if-you-define-or-delete-any-copy-move-or-destructor-function-define-or-delete-them-all )
+        IDocumentMetadata() = default;
+        IDocumentMetadata(const IDocumentMetadata&) = delete;             // copy constructor
+        IDocumentMetadata& operator=(const IDocumentMetadata&) = delete;  // copy assignment
+        IDocumentMetadata(IDocumentMetadata&&) = delete;                  // move constructor
+        IDocumentMetadata& operator=(IDocumentMetadata&&) = delete;       // move assignment
     };
 
     enum class DocumentMetadataItemFlags : std::uint8_t
@@ -86,6 +98,13 @@ namespace imgdoc2
             bool recursive,
             DocumentMetadataItemFlags flags,
             const std::function<bool(imgdoc2::dbIndex, const DocumentMetadataItem& item)>& func) = 0;
+
+        // no copy and no move (-> https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#c21-if-you-define-or-delete-any-copy-move-or-destructor-function-define-or-delete-them-all )
+        IDocumentMetadataRead() = default;
+        IDocumentMetadataRead(const IDocumentMetadataRead&) = delete;             // copy constructor
+        IDocumentMetadataRead& operator=(const IDocumentMetadataRead&) = delete;  // copy assignment
+        IDocumentMetadataRead(IDocumentMetadataRead&&) = delete;                  // move constructor
+        IDocumentMetadataRead& operator=(IDocumentMetadataRead&&) = delete;       // move assignment
     };
 
     class IDocumentMetadataWrite : public IDocumentMetadata
@@ -134,5 +153,12 @@ namespace imgdoc2
                     const std::string& path,
                     DocumentMetadataType type,
                     const IDocumentMetadata::metadata_item_variant& value) = 0;
+
+        // no copy and no move (-> https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#c21-if-you-define-or-delete-any-copy-move-or-destructor-function-define-or-delete-them-all )
+        IDocumentMetadataWrite() = default;
+        IDocumentMetadataWrite(const IDocumentMetadataWrite&) = delete;             // copy constructor
+        IDocumentMetadataWrite& operator=(const IDocumentMetadataWrite&) = delete;  // copy assignment
+        IDocumentMetadataWrite(IDocumentMetadataWrite&&) = delete;                  // move constructor
+        IDocumentMetadataWrite& operator=(IDocumentMetadataWrite&&) = delete;       // move assignment
     };
 }

@@ -12,7 +12,7 @@ using namespace imgdoc2;
     auto statement = this->CreateStatementForRetrievingItem(flags);
     statement->BindInt64(1, idx);
 
-    if (!this->document_->GetDatabase_connection()->StepStatement(statement.get()))
+    if (!this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))
     {
         // this means that the tile with the specified index ('idx') was not found
         ostringstream ss;
@@ -81,7 +81,7 @@ void DocumentMetadataReader::EnumerateItems(
 {
     const auto statement = this->CreateStatementForEnumerateAllItemsWithAncestorAndDataBind(recursive, parent);
 
-    while (this->document_->GetDatabase_connection()->StepStatement(statement.get()))
+    while (this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))
     {
         const imgdoc2::dbIndex index = statement->GetResultInt64(0);
         DocumentMetadataItem document_metadata_item = this->RetrieveDocumentMetadataItemFromStatement(statement, flags);
@@ -114,7 +114,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForRetrievi
     ostringstream string_stream;
     string_stream << "SELECT Pk, Name,TypeDiscriminator,ValueDouble,ValueInteger,ValueString FROM [" << "METADATA" << "] WHERE " <<
         "[" << "Pk" << "] = ?1;";
-    auto statement = this->document_->GetDatabase_connection()->PrepareStatement(string_stream.str());
+    auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
     return statement;
 }
 
@@ -162,7 +162,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerat
         }
     }
 
-    auto statement = this->document_->GetDatabase_connection()->PrepareStatement(string_stream.str());
+    auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
     if (parent_has_value)
     {
         statement->BindInt64(1, parent.value());

@@ -12,6 +12,7 @@
 class DocumentMetadataReader : public DocumentMetadataBase, public imgdoc2::IDocumentMetadataRead
 {
 public:
+    DocumentMetadataReader() = delete;
     DocumentMetadataReader(std::shared_ptr<Document> document) : DocumentMetadataBase(std::move(document)) {}
     ~DocumentMetadataReader() override = default;
 

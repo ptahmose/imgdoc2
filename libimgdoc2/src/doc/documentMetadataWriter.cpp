@@ -19,7 +19,7 @@ imgdoc2::dbIndex DocumentMetadataWriter::UpdateOrCreateItem(
     this->CheckNodeNameAndThrowIfInvalid(name);
     const DatabaseDataTypeValue item_type = DocumentMetadataBase::DetermineDatabaseDataTypeValueOrThrow(type, value);
     auto statement = this->CreateStatementForUpdateOrCreateItemAndBindData(create_node_if_not_exists, parent, name, item_type, value);
-    this->document_->GetDatabase_connection()->Execute(statement.get());
+    this->GetDocument()->GetDatabase_connection()->Execute(statement.get());
     statement.reset();
 
     // Ok this worked the new item was inserted or updated. Now we need to get the id of the item.
@@ -28,7 +28,7 @@ imgdoc2::dbIndex DocumentMetadataWriter::UpdateOrCreateItem(
     const auto select_statement = this->CreateQueryForNameAndAncestorIdStatement(name, parent);
 
     // we are expecting exactly one result, or zero in case of "not found"
-    if (!this->document_->GetDatabase_connection()->StepStatement(select_statement.get()))
+    if (!this->GetDocument()->GetDatabase_connection()->StepStatement(select_statement.get()))
     {
         throw std::logic_error("Could not find the item we just inserted or updated");
     }
@@ -82,7 +82,7 @@ uint64_t DocumentMetadataWriter::DeleteItem(
     //  we want to do nothing and return 0.
     if (statement)
     {
-        this->document_->GetDatabase_connection()->Execute(statement.get(), &number_of_modified_rows);
+        this->GetDocument()->GetDatabase_connection()->Execute(statement.get(), &number_of_modified_rows);
     }
 
     return gsl::narrow_cast<uint64_t>(number_of_modified_rows);
@@ -159,7 +159,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForUpdateOr
         }
     }
 
-    auto statement = this->document_->GetDatabase_connection()->PrepareStatement(string_stream.str());
+    auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
 
     int binding_index = 1;
     statement->BindString(binding_index++, name);
@@ -193,7 +193,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateQueryForNameAndAnces
 
     string_stream << ";";
 
-    auto statement = this->document_->GetDatabase_connection()->PrepareStatement(string_stream.str());
+    auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
     statement->BindString(1, name);
     if (parent_has_value)
     {
@@ -261,7 +261,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForDeleteIt
         }
 
 
-        auto statement = this->document_->GetDatabase_connection()->PrepareStatement(string_stream.str());
+        auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
         statement->BindInt64(1, parent.value());
         return statement;
     }
@@ -278,7 +278,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForDeleteIt
                 ") " <<
                 "DELETE FROM [" << "METADATA" << "] WHERE " << "[" << "Pk" << "] IN (SELECT id FROM children) OR " << "[" << "AncestorId" << "] IS NULL;";
 
-            return this->document_->GetDatabase_connection()->PrepareStatement(string_stream.str());
+            return this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
         }
         else
         {

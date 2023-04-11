@@ -15,8 +15,11 @@
 
 class DocumentMetadataBase
 {
-protected:
+private:
     std::shared_ptr<Document> document_;
+public:
+    DocumentMetadataBase() = delete;
+protected:
 
     explicit DocumentMetadataBase(std::shared_ptr<Document> document) : document_(std::move(document))
     {}
@@ -58,6 +61,8 @@ protected:
     bool TryMapPathAndGetTerminalNode(const std::string& path, std::optional<imgdoc2::dbIndex>* terminal_node_id);
 
     std::vector<std::string_view> SplitPath(const std::string_view& path);
+
+    [[nodiscard]] const std::shared_ptr<Document>& GetDocument() const { return this->document_; }
 private:
     std::shared_ptr<IDbStatement> CreateQueryForNodeIdsForPath(const std::vector<std::string_view>& path_parts);
 };

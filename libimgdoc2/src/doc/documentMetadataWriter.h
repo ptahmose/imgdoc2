@@ -11,20 +11,8 @@
 
 class DocumentMetadataWriter : public DocumentMetadataBase, public imgdoc2::IDocumentMetadataWrite
 {
-private:
-    //std::shared_ptr<Document> document_;
-
-    /*enum class DataType
-    {
-        null = 0,
-        int32 = 1,
-        uint32 = 2,
-        doublefloat = 3,
-        singlefloat = 4,
-        utf8string = 5,
-        json = 6,
-    };*/
 public:
+    DocumentMetadataWriter() = delete;
     DocumentMetadataWriter(std::shared_ptr<Document> document) : DocumentMetadataBase(std::move(document)) {}
     ~DocumentMetadataWriter() override = default;
 
