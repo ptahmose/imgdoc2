@@ -278,8 +278,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForDeleteIt
                 ") " <<
                 "DELETE FROM [" << "METADATA" << "] WHERE " << "[" << "Pk" << "] IN (SELECT id FROM children) OR " << "[" << "AncestorId" << "] IS NULL;";
 
-            auto statement = this->document_->GetDatabase_connection()->PrepareStatement(string_stream.str());
-            return statement;
+            return this->document_->GetDatabase_connection()->PrepareStatement(string_stream.str());
         }
         else
         {
