@@ -1,6 +1,10 @@
+// SPDX-FileCopyrightText: 2023 Carl Zeiss Microscopy GmbH
+//
+// SPDX-License-Identifier: MIT
+
 #include "documentMetadataBase.h"
 #include "exceptions.h"
-#include "gsl/narrow"
+#include <gsl/narrow>
 
 using namespace std;
 using namespace imgdoc2;

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 Carl Zeiss Microscopy GmbH
+//
+// SPDX-License-Identifier: MIT
+
 #include "documentMetadataReader.h"
 
 using namespace std;

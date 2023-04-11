@@ -594,7 +594,7 @@ TEST(Metadata, DeleteItem_Scenario1)
     const auto id_e = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
     const auto id_f = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
 
-    // Act
+    // Act & Assert
 
     // now, try to delete the node 'C' - this should fail (or - return zero deleted nodes/row), because it has children
     auto number_of_nodes_deleted = metadata_writer->DeleteItem(id_c, false);
@@ -615,4 +615,126 @@ TEST(Metadata, DeleteItem_Scenario1)
     // so, now 'B' has no children anymore, so we can delete it
     number_of_nodes_deleted = metadata_writer->DeleteItem(id_b, false);
     EXPECT_EQ(number_of_nodes_deleted, 1);
+}
+
+TEST(Metadata, DeleteItemDeleteRoot)
+{
+    // Arrange
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_writer = doc->GetDocumentMetadataWriter();
+
+    // we construct the following tree:
+    // 
+    //                 A
+    //                 |
+    //                 B
+    //                / \
+    //               C   D
+    //              / \
+    //             E   F
+
+    const auto id_b = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::Null, std::monostate());
+    const auto id_c = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+    const auto id_d = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/D", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
+    const auto id_e = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
+    const auto id_f = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
+
+    // Act & Assert
+
+    // first, try to delete the "root" with "recursive=false" - this should always to nothing
+    auto number_of_nodes_deleted = metadata_writer->DeleteItem(nullopt, false);
+    EXPECT_EQ(number_of_nodes_deleted, 0);
+
+    // then - try to delete the "root" with "recursive=true" - this should delete all nodes
+    number_of_nodes_deleted = metadata_writer->DeleteItem(nullopt, true);
+    // we expect that all nodes have been deleted, which are 6 altogether (A, B, C, D, E, F)
+    EXPECT_EQ(number_of_nodes_deleted, 6);
+}
+
+TEST(Metadata, DeleteItemForPath_Scenario1)
+{
+    // Arrange
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_writer = doc->GetDocumentMetadataWriter();
+
+    // we construct the following tree:
+    // 
+    //                 A
+    //                 |
+    //                 B
+    //                / \
+    //               C   D
+    //              / \
+    //             E   F
+
+    const auto id_b = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::Null, std::monostate());
+    const auto id_c = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+    const auto id_d = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/D", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
+    const auto id_e = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
+    const auto id_f = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
+
+    // Act & Assert
+
+    // now, try to delete the node 'C' - this should fail (or - return zero deleted nodes/row), because it has children
+    auto number_of_nodes_deleted = metadata_writer->DeleteItemForPath("A/B/C", false);
+    EXPECT_EQ(number_of_nodes_deleted, 0);
+
+    // now, try again, but this time, instruct the delete to be recursive - this should succeed (and remove 'C', 'E' and 'F')
+    number_of_nodes_deleted = metadata_writer->DeleteItemForPath("A/B/C", true);
+    EXPECT_EQ(number_of_nodes_deleted, 3);
+
+    // now, try to delete the node 'B' - this should fail (or - return zero deleted nodes/row), because it has a child ('D')
+    number_of_nodes_deleted = metadata_writer->DeleteItemForPath("A/B", false);
+    EXPECT_EQ(number_of_nodes_deleted, 0);
+
+    // next, delete the node 'D'
+    number_of_nodes_deleted = metadata_writer->DeleteItemForPath("A/B/D", false);
+    EXPECT_EQ(number_of_nodes_deleted, 1);
+
+    // so, now 'B' has no children anymore, so we can delete it
+    number_of_nodes_deleted = metadata_writer->DeleteItemForPath("A/B", false);
+    EXPECT_EQ(number_of_nodes_deleted, 1);
+}
+
+TEST(Metadata, DeleteItemForPathDeleteRoot)
+{
+    // Arrange
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_writer = doc->GetDocumentMetadataWriter();
+
+    // we construct the following tree:
+    // 
+    //                 A
+    //                 |
+    //                 B
+    //                / \
+    //               C   D
+    //              / \
+    //             E   F
+
+    const auto id_b = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::Null, std::monostate());
+    const auto id_c = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+    const auto id_d = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/D", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
+    const auto id_e = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
+    const auto id_f = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::Text, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
+
+    // Act & Assert
+
+    // first, try to delete the "root" with "recursive=false" - this should always to nothing
+    auto number_of_nodes_deleted = metadata_writer->DeleteItemForPath("", false);
+    EXPECT_EQ(number_of_nodes_deleted, 0);
+
+    // then - try to delete the "root" with "recursive=true" - this should delete all nodes
+    number_of_nodes_deleted = metadata_writer->DeleteItemForPath("", true);
+    // we expect that all nodes have been deleted, which are 6 altogether (A, B, C, D, E, F)
+    EXPECT_EQ(number_of_nodes_deleted, 6);
 }

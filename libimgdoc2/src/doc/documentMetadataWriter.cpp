@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 Carl Zeiss Microscopy GmbH
+//
+// SPDX-License-Identifier: MIT
+
 #include "documentMetadataWriter.h"
 
 #include "gsl/util"
@@ -71,8 +75,16 @@ uint64_t DocumentMetadataWriter::DeleteItem(
 {
     const auto statement = this->CreateStatementForDeleteItemAndBindData(recursively, primary_key);
 
-    int64_t number_of_modified_rows;
-    this->document_->GetDatabase_connection()->Execute(statement.get(), &number_of_modified_rows);
+    int64_t number_of_modified_rows = 0;
+
+    // In the special case "primary_key=nullopt=root" and recursively=false we do not want to delete anything,
+    //  and in this case "CreateStatementForDeleteItemAndBindData" returns 0. So, in this corner stone case,
+    //  we want to do nothing and return 0.
+    if (statement)
+    {
+        this->document_->GetDatabase_connection()->Execute(statement.get(), &number_of_modified_rows);
+    }
+
     return gsl::narrow_cast<uint64_t>(number_of_modified_rows);
 }
 
@@ -80,7 +92,15 @@ uint64_t DocumentMetadataWriter::DeleteItemForPath(
            const std::string& path,
            bool recursively)
 {
-    throw std::logic_error("The method or operation is not implemented.");
+    optional<imgdoc2::dbIndex> idx;
+    const bool success = this->TryMapPathAndGetTerminalNode(path, &idx);
+    if (success)
+    {
+        return this->DeleteItem(idx, recursively);
+    }
+
+    // TODO(Jbl): find a better exception type
+    throw runtime_error("DocumentMetadataReader::DeleteItemForPath");
 }
 
 std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForUpdateOrCreateItemAndBindData(bool create_node_if_not_exists, std::optional<imgdoc2::dbIndex> parent, const std::string& name,
@@ -216,7 +236,6 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForDeleteIt
 
     if (parent.has_value())
     {
-
         if (!recursively)
         {
             string_stream << "DELETE FROM [" << "METADATA" << "] WHERE " <<
@@ -245,6 +264,27 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForDeleteIt
         auto statement = this->document_->GetDatabase_connection()->PrepareStatement(string_stream.str());
         statement->BindInt64(1, parent.value());
         return statement;
+    }
+    else
+    {
+        // This means that we want to delete the "root" node. It is not possible to delete the "root" itself, but everything in it.
+        // Following this logic, only "recursively=true" is allowed or makes sense.
+        if (recursively)
+        {
+            string_stream << "WITH RECURSIVE children(id) AS (" <<
+                "SELECT [" << "Pk" << "] FROM [" << "METADATA" << "] WHERE " << "[" << "AncestorId" << "] IS NULL " <<
+                "UNION ALL " <<
+                "SELECT [" << "METADATA" << "].[" << "Pk" << "] FROM [" << "METADATA" << "] JOIN children ON [" << "METADATA" << "].[" << "AncestorId" << "]=children.id" <<
+                ") " <<
+                "DELETE FROM [" << "METADATA" << "] WHERE " << "[" << "Pk" << "] IN (SELECT id FROM children) OR " << "[" << "AncestorId" << "] IS NULL;";
+
+            auto statement = this->document_->GetDatabase_connection()->PrepareStatement(string_stream.str());
+            return statement;
+        }
+        else
+        {
+            return nullptr;
+        }
     }
 }
 
