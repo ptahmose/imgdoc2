@@ -7,56 +7,20 @@
 using namespace std;
 using namespace imgdoc2;
 
-/*virtual*/imgdoc2::DocumentMetadataItem DocumentMetadataReader::GetItem(imgdoc2::dbIndex idx, imgdoc2::DocumentMetadataItemFlags flags)
+/*virtual*/imgdoc2::DocumentMetadataItem DocumentMetadataReader::GetItem(imgdoc2::dbIndex primary_key, imgdoc2::DocumentMetadataItemFlags flags)
 {
-    auto statement = this->CreateStatementForRetrievingItem(flags);
-    statement->BindInt64(1, idx);
+    const auto statement = this->CreateStatementForRetrievingItem(flags);
+    statement->BindInt64(1, primary_key);
 
     if (!this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))
     {
-        // this means that the tile with the specified index ('idx') was not found
+        // this means that the tile with the specified index ('primary_key') was not found
         ostringstream ss;
-        ss << "Request for reading a non-existing item (with pk=" << idx << ")";
-        throw non_existing_tile_exception(ss.str(), idx);
+        ss << "Request for reading a non-existing item (with pk=" << primary_key << ")";
+        throw non_existing_item_exception(ss.str(), primary_key);
     }
 
     DocumentMetadataItem item = this->RetrieveDocumentMetadataItemFromStatement(statement, flags);
-    /*DocumentMetadataItem item;
-    if ((flags & DocumentMetadataItemFlags::NameValid) == DocumentMetadataItemFlags::NameValid)
-    {
-        item.name = statement->GetResultString(0);
-    }
-
-    if ((flags & DocumentMetadataItemFlags::DocumentMetadataTypeAndValueValid) == DocumentMetadataItemFlags::DocumentMetadataTypeAndValueValid)
-    {
-        const auto database_item_type_value = statement->GetResultInt32(1);
-        switch (database_item_type_value)
-        {
-            case DatabaseDataTypeValue::null:
-                item.value = std::monostate();
-                item.type = DocumentMetadataType::Null;
-                break;
-            case DatabaseDataTypeValue::int32:
-                item.value = IDocumentMetadataWrite::metadata_item_variant(statement->GetResultInt32(3));
-                item.type = DocumentMetadataType::Int32;
-                break;
-            case DatabaseDataTypeValue::doublefloat:
-                item.value = IDocumentMetadataWrite::metadata_item_variant(statement->GetResultDouble(2));
-                item.type = DocumentMetadataType::Double;
-                break;
-            case DatabaseDataTypeValue::utf8string:
-                item.value = IDocumentMetadataWrite::metadata_item_variant(statement->GetResultString(4));
-                item.type = DocumentMetadataType::Text;
-                break;
-            case DatabaseDataTypeValue::json:
-                item.value = IDocumentMetadataWrite::metadata_item_variant(statement->GetResultString(4));
-                item.type = DocumentMetadataType::Json;
-                break;
-            default:
-                throw runtime_error("DocumentMetadataReader::GetItem: Unknown data type");
-        }
-    }*/
-
     return item;
 }
 

@@ -92,7 +92,16 @@ namespace imgdoc2
     public:
         virtual ~IDocumentMetadataRead() = default;
 
-        virtual imgdoc2::DocumentMetadataItem GetItem(imgdoc2::dbIndex idx, DocumentMetadataItemFlags flags) = 0;
+        /// Get the item identified by the specified key. The argument 'flags' specifies which pieces of information should be retrieved.
+        /// Only the information specified in the flags can be expected to be valid in the returned DocumentMetadataItem.
+        /// If the item does not exist, an exception of type imgdoc2::non_existing_item_exception is thrown.
+        ///
+        /// \param  primary_key     The key of the metadata item to be retrieved.
+        /// \param  flags           The flags.
+        ///
+        /// \returns    The item.
+        virtual imgdoc2::DocumentMetadataItem GetItem(imgdoc2::dbIndex primary_key, DocumentMetadataItemFlags flags) = 0;
+
         virtual imgdoc2::DocumentMetadataItem GetItemForPath(const std::string& path, imgdoc2::DocumentMetadataItemFlags flags) = 0;
         virtual void EnumerateItems(
             std::optional<imgdoc2::dbIndex> parent,

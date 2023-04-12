@@ -9,6 +9,7 @@
 #include "document.h"
 #include "documentMetadataBase.h"
 
+/// Implementation of the IDocumentMetadataRead interface.
 class DocumentMetadataReader : public DocumentMetadataBase, public imgdoc2::IDocumentMetadataRead
 {
 public:
@@ -16,7 +17,7 @@ public:
     DocumentMetadataReader(std::shared_ptr<Document> document) : DocumentMetadataBase(std::move(document)) {}
     ~DocumentMetadataReader() override = default;
 
-    imgdoc2::DocumentMetadataItem GetItem(imgdoc2::dbIndex idx, imgdoc2::DocumentMetadataItemFlags flags) override;
+    imgdoc2::DocumentMetadataItem GetItem(imgdoc2::dbIndex primary_key, imgdoc2::DocumentMetadataItemFlags flags) override;
     imgdoc2::DocumentMetadataItem GetItemForPath(const std::string& path, imgdoc2::DocumentMetadataItemFlags flags) override;
     void EnumerateItems(
       std::optional<imgdoc2::dbIndex> parent,

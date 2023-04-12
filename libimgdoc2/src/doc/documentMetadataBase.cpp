@@ -120,20 +120,6 @@ int DocumentMetadataBase::BindTypeDiscriminatorAndData(
     return binding_index;
 }
 
-//static std::vector<std::string_view> tokenize(std::string_view str, char deliminator)
-//{
-//    std::vector<std::string_view> tokens;
-//    std::size_t start = 0, end = 0;
-//    while ((end = str.find(deliminator, start)) != std::string_view::npos)
-//    {
-//        tokens.push_back(str.substr(start, end - start));
-//        start = end + 1;
-//    }
-//
-//    tokens.push_back(str.substr(start));
-//    return tokens;
-//}
-
 /*static*/std::vector<std::string_view> DocumentMetadataBase::SplitPath(const std::string_view& path)
 {
     std::vector<std::string_view> tokens;

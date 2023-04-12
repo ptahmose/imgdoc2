@@ -62,7 +62,7 @@ imgdoc2::dbIndex DocumentMetadataWriter::UpdateOrCreateItemForPath(
     }
 
     return this->UpdateOrCreateItem(
-        pk_of_nodes_on_path.back(),
+        pk_of_nodes_on_path.empty() ? optional<dbIndex>(nullopt) : optional<dbIndex>(pk_of_nodes_on_path.back()),
         create_node_if_not_exists,
         string{ path_parts.back() },
         type,
