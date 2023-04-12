@@ -756,10 +756,26 @@ TEST(Metadata, ConstructDeepMetadataHierarchyAndDeleteAllItems)
         IDocumentMetadataWrite::metadata_item_variant("Testtext"));
 
     // Act
-    const auto     number_of_nodes_deleted = metadata_writer->DeleteItemForPath("", true);
+    const auto number_of_nodes_deleted = metadata_writer->DeleteItemForPath("", true);
 
     // Assert
 
     // we expect that all nodes have been deleted, which are 26 altogether (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z)
     EXPECT_EQ(number_of_nodes_deleted, 26);
+}
+
+TEST(Metadata, InvalidPathWithGetItem)
+{
+    // Arrange
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_reader = doc->GetDocumentMetadataReader();
+
+    EXPECT_THROW(metadata_reader->GetItemForPath("/test", DocumentMetadataItemFlags::All), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("test//", DocumentMetadataItemFlags::All), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("test/", DocumentMetadataItemFlags::All), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("test//abc", DocumentMetadataItemFlags::All), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("abc/def//ghi", DocumentMetadataItemFlags::All), invalid_path_exception);
 }

@@ -17,14 +17,18 @@ namespace imgdoc2
     /// Values that represent the type of a document metadata item.
     enum class DocumentMetadataType : std::uint8_t
     {
-        Invalid = 0,        ///< An enum constant representing the invalid option. This value is not legal for any call into the document metadata API.
+        /// An enum constant representing the invalid option. This value is not legal for any call into the document metadata API.
+        Invalid = 0,        
 
         /// An enum constant representing the default option.Default means that the type is determined from the value variant.
         /// The mapping is as follows: If the value variant is std::monostate, the type is set to Invalid. If the value variant is a string, the type is set to Text. 
         /// If the value variant is int32_t, the type is set to Int32. If the value variant is double, the type is set to Double. 
         Default,
 
+        /// An enum constant representing the invalid option. This means that there is no value stored for this metadata item.
         Null,
+
+        /// An enum constant representing the 'text' option. The value variant must contain a string.
         Text,
         Int32,
         Json,
@@ -32,6 +36,7 @@ namespace imgdoc2
 
     };
 
+    /// Base interface for document metadata.
     class IDocumentMetadata
     {
     public:
@@ -81,6 +86,7 @@ namespace imgdoc2
         IDocumentMetadata::metadata_item_variant value;
     };
 
+    /// The interface for read-only access to document metadata.
     class IDocumentMetadataRead : public IDocumentMetadata
     {
     public:
@@ -107,6 +113,7 @@ namespace imgdoc2
         IDocumentMetadataRead& operator=(IDocumentMetadataRead&&) = delete;       // move assignment
     };
 
+    /// The interface for write access to document metadata.
     class IDocumentMetadataWrite : public IDocumentMetadata
     {
     public:

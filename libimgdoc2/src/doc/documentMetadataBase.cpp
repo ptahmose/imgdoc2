@@ -83,18 +83,6 @@ DocumentMetadataBase::DatabaseDataTypeValue DocumentMetadataBase::DetermineDatab
     return DatabaseDataTypeValue::invalid;
 }
 
-//void DocumentMetadataBase::BindAncestorId(const std::shared_ptr<IDbStatement>& database_statement, int binding_index, const std::optional<imgdoc2::dbIndex>& parent)
-//{
-//    if (parent.has_value())
-//    {
-//        database_statement->BindInt64(binding_index, parent.value());
-//    }
-//    else
-//    {
-//        database_statement->BindNull(binding_index);
-//    }
-//}
-
 int DocumentMetadataBase::BindTypeDiscriminatorAndData(
     const std::shared_ptr<IDbStatement>& database_statement,
     int binding_index,
@@ -132,28 +120,38 @@ int DocumentMetadataBase::BindTypeDiscriminatorAndData(
     return binding_index;
 }
 
-static std::vector<std::string_view> tokenize(std::string_view str, char deliminator)
+//static std::vector<std::string_view> tokenize(std::string_view str, char deliminator)
+//{
+//    std::vector<std::string_view> tokens;
+//    std::size_t start = 0, end = 0;
+//    while ((end = str.find(deliminator, start)) != std::string_view::npos)
+//    {
+//        tokens.push_back(str.substr(start, end - start));
+//        start = end + 1;
+//    }
+//
+//    tokens.push_back(str.substr(start));
+//    return tokens;
+//}
+
+/*static*/std::vector<std::string_view> DocumentMetadataBase::SplitPath(const std::string_view& path)
 {
     std::vector<std::string_view> tokens;
     std::size_t start = 0, end = 0;
-    while ((end = str.find(deliminator, start)) != std::string_view::npos)
+    while ((end = path.find(DocumentMetadataBase::kPathDelimiter_, start)) != std::string_view::npos)
     {
-        tokens.push_back(str.substr(start, end - start));
+        if (end == start)
+        {
+            throw invalid_path_exception("path must not contain zero-length fragments");
+        }
+
+        tokens.push_back(path.substr(start, end - start));
         start = end + 1;
     }
 
-    tokens.push_back(str.substr(start));
-    return tokens;
-}
-
-std::vector<std::string_view> DocumentMetadataBase::SplitPath(const std::string_view& path)
-{
-    std::vector<std::string_view> tokens;
-    std::size_t start = 0, end = 0;
-    while ((end = path.find('/', start)) != std::string_view::npos)
+    if (start == path.size())
     {
-        tokens.push_back(path.substr(start, end - start));
-        start = end + 1;
+        throw invalid_path_exception("path must not end with a delimiter");
     }
 
     tokens.push_back(path.substr(start));
@@ -208,37 +206,18 @@ std::vector<imgdoc2::dbIndex> DocumentMetadataBase::GetNodeIdsForPath(const std:
     }
 
     // the path must NOT start with a slash
-    if (path[0] == '/')
+    if (path[0] == DocumentMetadataBase::kPathDelimiter_)
     {
-        // TODO(Jbl): find more appropriate exception
-        throw invalid_argument_exception("The path must not start with a slash");
+        throw invalid_path_exception("The path must not start with a slash");
     }
 
-    const std::vector<std::string_view> tokens = tokenize(path, '/');
+    const std::vector<std::string_view> tokens = DocumentMetadataBase::SplitPath(path);
     if (count_of_parts_in_path != nullptr)
     {
         *count_of_parts_in_path = tokens.size();
     }
 
     return this->GetNodeIdsForPathParts(tokens);
-    /*const auto statement = this->CreateQueryForNodeIdsForPath(tokens);
-
-    // TODO(JBl) : The binding currently is making a copy of the string. This is not necessary, we could use a "STATIC" binding
-    //              if we ensure that the string is not deleted before the statement is executed.
-    for (size_t i = 0; i < tokens.size(); i++)
-    {
-        statement->BindStringView(gsl::narrow<int>(i + 1), tokens[i]);
-    }
-
-    std::vector<imgdoc2::dbIndex> result;
-    result.reserve(tokens.size());
-    while (this->document_->GetDatabase_connection()->StepStatement(statement.get()))
-    {
-        const imgdoc2::dbIndex index = statement->GetResultInt64(0);
-        result.push_back(index);
-    }
-
-    return result;*/
 }
 
 std::vector<imgdoc2::dbIndex> DocumentMetadataBase::GetNodeIdsForPathParts(const std::vector<std::string_view>& parts)

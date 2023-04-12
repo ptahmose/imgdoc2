@@ -17,6 +17,7 @@ class DocumentMetadataBase
 {
 private:
     std::shared_ptr<Document> document_;
+    constexpr static char kPathDelimiter_ = '/';
 public:
     DocumentMetadataBase() = delete;
 protected:
@@ -60,9 +61,15 @@ protected:
 
     bool TryMapPathAndGetTerminalNode(const std::string& path, std::optional<imgdoc2::dbIndex>* terminal_node_id);
 
-    std::vector<std::string_view> SplitPath(const std::string_view& path);
-
     [[nodiscard]] const std::shared_ptr<Document>& GetDocument() const { return this->document_; }
+
+    /// Splits a the specified path (at the delimiter kPathDelimiter_) into its parts.
+    /// If there is zero-length part, then an imgdoc2::invalid_path_exception is thrown.
+    ///
+    /// \param  path    The path to be split.
+    ///
+    /// \returns    A vector containing the parts;
+    static std::vector<std::string_view> SplitPath(const std::string_view& path);
 private:
     std::shared_ptr<IDbStatement> CreateQueryForNodeIdsForPath(const std::vector<std::string_view>& path_parts);
 };

@@ -131,6 +131,25 @@ namespace imgdoc2
         [[nodiscard]] imgdoc2::dbIndex GetIndex() const { return this->index_; }
     };
 
+    /// Exception for signalling that an invalid path was specified.
+    class invalid_path_exception : public imgdoc2_exception
+    {
+    public:
+        invalid_path_exception() = delete;
+
+        /// Constructor which specifies the primary key of the non existing tile.
+        /// \param  error_message Message describing the error.
+        explicit invalid_path_exception(const std::string& error_message)
+            : imgdoc2_exception(error_message.c_str())
+        {}
+
+        /// Constructor which specifies the primary key of the non existing tile.
+        /// \param  error_message Message describing the error.
+        explicit invalid_path_exception(const char* error_message)
+            : imgdoc2_exception(error_message)
+        {}
+    };
+
     /// Exception for signalling an unexpected internal error condition.
     class internal_error_exception : public imgdoc2_exception
     {
