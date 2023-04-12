@@ -47,14 +47,30 @@ void DocumentMetadataReader::EnumerateItems(
 {
     const auto statement = this->CreateStatementForEnumerateAllItemsWithAncestorAndDataBind(recursive, parent);
 
+    bool at_least_one_item_found = false;
     while (this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))
     {
+        at_least_one_item_found = true;
         const imgdoc2::dbIndex index = statement->GetResultInt64(0);
         DocumentMetadataItem document_metadata_item = this->RetrieveDocumentMetadataItemFromStatement(statement, flags);
         const bool continue_operation = func(index, document_metadata_item);
         if (!continue_operation)
         {
             break;
+        }
+    }
+
+    if (!at_least_one_item_found && parent.has_value())
+    {
+        // Unfortunately, we cannot distinguish between "no items found because parent does have a child" and "no items found because the parent does not exist".
+        // Maybe there is a more clever way to check whether the parent exists, but for now we have to execute an additional query.
+        // Note that if we query for the root node, we do not need to check whether the parent exists, because the root node always exists.
+        const bool parent_exists = this->CheckIfItemExists(parent.value());
+        if (!parent_exists)
+        {
+            ostringstream string_stream;
+            string_stream << "The parent with pk=" << parent.value() << " does not exist.";
+            throw non_existing_item_exception(string_stream.str(), parent.value());
         }
     }
 }
@@ -69,10 +85,13 @@ void DocumentMetadataReader::EnumerateItemsForPath(
     const bool success = this->TryMapPathAndGetTerminalNode(path, &idx);
     if (success)
     {
-        return this->EnumerateItems(idx, recursive, flags, func);
+        this->EnumerateItems(idx, recursive, flags, func);
+        return;
     }
 
-    throw runtime_error("DocumentMetadataReader::EnumerateItems");
+    ostringstream string_stream;
+    string_stream << "The path '" << path << "' does not exist.";
+    throw invalid_path_exception(string_stream.str());
 }
 
 std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForRetrievingItem(imgdoc2::DocumentMetadataItemFlags flags)
@@ -181,4 +200,21 @@ imgdoc2::DocumentMetadataItem DocumentMetadataReader::RetrieveDocumentMetadataIt
         }
     }
     return item;
+}
+
+bool DocumentMetadataReader::CheckIfItemExists(imgdoc2::dbIndex primary_key)
+{
+    ostringstream string_stream;
+    string_stream << "SELECT EXISTS(SELECT 1 FROM [" << "METADATA" << "] WHERE Pk = ?1)";
+
+    auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
+    statement->BindInt64(1, primary_key);
+
+    if (!this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))
+    {
+        throw internal_error_exception("DocumentMetadataReader::CheckIfItemExists: Could not execute statement.");
+    }
+
+    const int64_t result = statement->GetResultInt64(0);
+    return result == 1;
 }

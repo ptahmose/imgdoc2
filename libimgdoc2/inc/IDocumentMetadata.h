@@ -112,11 +112,30 @@ namespace imgdoc2
         /// \returns    The item.
         virtual imgdoc2::DocumentMetadataItem GetItemForPath(const std::string& path, imgdoc2::DocumentMetadataItemFlags flags) = 0;
 
+        /// Enumerate items for which the specified node 'parent' is the ancestor. If recursive is false, then only the direct children of the specified parent are enumerated.
+        /// If recursive is true, then all descendants of the specified parent are enumerated.
+        /// If the specified parent is not valid (nullopt), then all items are enumerated.
+        /// IF the specified parent is valid, but does not exist, an exception of type imgdoc2::non_existing_item_exception is thrown.
+        ///
+        /// \param  parent      The parent node for which the children are to be enumerated. If nullopt, then all items are enumerated.
+        /// \param  recursive   False to enumerate only the direct children of the specified parent, true to enumerate all descendants of the specified parent.
+        /// \param  flags       The flags.
+        /// \param  func        The items found are reported to this function. If it returns false, the enumeration is stopped.
         virtual void EnumerateItems(
             std::optional<imgdoc2::dbIndex> parent,
             bool recursive,
             DocumentMetadataItemFlags flags,
             const std::function<bool(imgdoc2::dbIndex, const DocumentMetadataItem& item)>& func) = 0;
+
+        /// Enumerate items below the specified path. If recursive is false, then only the direct children of the specified path are enumerated.
+        /// If recursive is true, then all descendants of the specified parent are enumerated.
+        /// If the path is empty, then all items are enumerated.
+        /// If the specified path does not exists, an exception of type imgdoc2::invalid_path_exception is thrown.
+        ///
+        /// \param  path        The path of the parent.
+        /// \param  recursive   False to enumerate only the direct children of the specified parent, true to enumerate all descendants of the specified parent.
+        /// \param  flags       The flags.
+        /// \param  func        The items found are reported to this function. If it returns false, the enumeration is stopped.
         virtual void EnumerateItemsForPath(
             const std::string& path,
             bool recursive,
