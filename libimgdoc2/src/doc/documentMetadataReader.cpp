@@ -34,7 +34,9 @@ using namespace imgdoc2;
         return this->GetItem(idx.value(), flags);
     }
 
-    throw runtime_error("Error in DocumentMetadataReader::GetItemForPath");
+    ostringstream string_stream;
+    string_stream << "The path '" << path << "' does not exist.";
+    throw invalid_path_exception(string_stream.str());
 }
 
 void DocumentMetadataReader::EnumerateItems(

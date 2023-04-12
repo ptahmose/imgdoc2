@@ -801,3 +801,25 @@ TEST(Metadata, CallGetItemForNonExistingItemAndExpectError)
 
     EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::All), non_existing_item_exception);
 }
+
+TEST(Metadata, CallGetItemForPathForNonExistingItemAndExpectError)
+{
+    // Arrange
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_reader = doc->GetDocumentMetadataReader();
+    const auto metadata_writer = doc->GetDocumentMetadataWriter();
+
+    const auto key = metadata_writer->UpdateOrCreateItemForPath(
+        true,
+        true,
+        "AAAABBBB",
+        DocumentMetadataType::Text,
+        IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+
+    EXPECT_THROW(metadata_reader->GetItemForPath("AAAABBBB/QQQ", DocumentMetadataItemFlags::All), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("AAAABBBB//QQQ", DocumentMetadataItemFlags::All), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("AAAABBB", DocumentMetadataItemFlags::All), invalid_path_exception);
+}
