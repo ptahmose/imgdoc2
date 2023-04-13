@@ -17,11 +17,11 @@ class DocumentMetadataBase
 {
 private:
     std::shared_ptr<Document> document_;
+protected:
     constexpr static char kPathDelimiter_ = '/';
 public:
     DocumentMetadataBase() = delete;
 protected:
-
     explicit DocumentMetadataBase(std::shared_ptr<Document> document) : document_(std::move(document))
     {}
 

@@ -43,4 +43,6 @@ private:
     ///
     /// \returns    The document-metadata-item object populated with the information from the statement, as indicated by the flags.
     imgdoc2::DocumentMetadataItem RetrieveDocumentMetadataItemFromStatement(const std::shared_ptr<IDbStatement>& statement, imgdoc2::DocumentMetadataItemFlags flags);
+
+    std::string GetPathForNode(imgdoc2::dbIndex node_id);
 };

@@ -64,8 +64,10 @@ namespace imgdoc2
         kPrimaryKeyValid = 1,
         kNameValid = 2,
         kDocumentMetadataTypeAndValueValid = 4,
+        kCompletePath = 8,
 
-        kAll = kPrimaryKeyValid | kNameValid | kDocumentMetadataTypeAndValueValid
+        kAll = kPrimaryKeyValid | kNameValid | kDocumentMetadataTypeAndValueValid,
+        kAllWithCompletePath = kAll | kCompletePath
     };
 
     /// Bitwise 'or' operator for DocumentMetadataItemFlags. This is needed to be able to use the flags in a bitwise fashion.
