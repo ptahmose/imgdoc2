@@ -97,8 +97,15 @@ void DocumentMetadataReader::EnumerateItemsForPath(
 std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForRetrievingItem(imgdoc2::DocumentMetadataItemFlags flags)
 {
     ostringstream string_stream;
-    string_stream << "SELECT Pk, Name,TypeDiscriminator,ValueDouble,ValueInteger,ValueString FROM [" << "METADATA" << "] WHERE " <<
-        "[" << "Pk" << "] = ?1;";
+    string_stream << "SELECT " <<
+        this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk) << ", " <<
+        this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Name) << ", " <<
+        this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_TypeDiscriminator) << ", " <<
+        this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueDouble) << ", " <<
+        this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueInteger) << ", " <<
+        this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueString) << " " <<
+        "FROM [" << this->GetDocument()->GetDataBaseConfigurationCommon()->GetTableNameForMetadataTableOrThrow() << "] WHERE " <<
+        "[" << this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk) << "]=?1;";
     auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
     return statement;
 }
@@ -108,42 +115,51 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerat
     const bool parent_has_value = parent.has_value();
     ostringstream string_stream;
 
+    const auto metadata_table_name = this->GetDocument()->GetDataBaseConfigurationCommon()->GetTableNameForMetadataTableOrThrow();
+    const auto column_name_pk = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk);
+    const auto column_name_name = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Name);
+    const auto column_name_ancestor_id = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_AncestorId);
+    const auto column_name_type_discriminator = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_TypeDiscriminator);
+    const auto column_name_value_double = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueDouble);
+    const auto column_name_value_integer = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueInteger);
+    const auto column_name_value_string = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueString);
+
     if (recursive)
     {
         string_stream <<
             "WITH RECURSIVE cte AS(" <<
-            "SELECT Pk, Name, AncestorId, TypeDiscriminator, ValueDouble, ValueInteger, ValueString  " <<
-            "FROM METADATA ";
+            "SELECT " << column_name_pk << "," << column_name_name << "," << column_name_ancestor_id << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << " " <<
+            "FROM [" << metadata_table_name << "] ";
 
         if (parent_has_value)
         {
-            string_stream << "WHERE AncestorId = ?1 ";
+            string_stream << "WHERE " << column_name_ancestor_id << "=?1 ";
         }
         else
         {
-            string_stream << "WHERE AncestorId IS NULL ";
+            string_stream << "WHERE " << column_name_ancestor_id << " IS NULL ";
         }
 
         string_stream <<
             "UNION ALL " <<
-            "SELECT c.Pk, c.Name, c.AncestorId,c.TypeDiscriminator, c.ValueDouble, c.ValueInteger, c.ValueString " <<
-            "FROM METADATA c " <<
-            "JOIN cte ON c.AncestorId = cte.Pk " <<
+            "SELECT c." << column_name_pk << ",c." << column_name_name << ",c." << column_name_ancestor_id << ",c." << column_name_type_discriminator << ",c." << column_name_value_double << ",c." << column_name_value_integer << ",c." << column_name_value_string << " " <<
+            "FROM [" << metadata_table_name << "] c " <<
+            "JOIN cte ON c." << column_name_ancestor_id << "=cte." << column_name_pk << " " <<
             ") " <<
-            "SELECT Pk, Name,TypeDiscriminator, ValueDouble, ValueInteger, ValueString FROM cte;";
+            "SELECT " << column_name_pk << "," << column_name_name << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << " FROM cte;";
     }
     else
     {
         string_stream <<
-            "SELECT Pk, Name, TypeDiscriminator, ValueDouble, ValueInteger, ValueString FROM METADATA ";
+            "SELECT " << column_name_pk << "," << column_name_name << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << " FROM [" << metadata_table_name << "] ";
 
         if (parent_has_value)
         {
-            string_stream << "WHERE AncestorId = ?1 ";
+            string_stream << "WHERE " << column_name_ancestor_id << "=?1 ";
         }
         else
         {
-            string_stream << "WHERE AncestorId IS NULL ";
+            string_stream << "WHERE " << column_name_ancestor_id << " IS NULL ";
         }
     }
 
@@ -205,9 +221,10 @@ imgdoc2::DocumentMetadataItem DocumentMetadataReader::RetrieveDocumentMetadataIt
 bool DocumentMetadataReader::CheckIfItemExists(imgdoc2::dbIndex primary_key)
 {
     ostringstream string_stream;
-    string_stream << "SELECT EXISTS(SELECT 1 FROM [" << "METADATA" << "] WHERE Pk = ?1)";
+    string_stream << "SELECT EXISTS(SELECT 1 FROM [" << this->GetDocument()->GetDataBaseConfigurationCommon()->GetTableNameForMetadataTableOrThrow() << "] " << 
+        "WHERE [" << this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk) << "]=?1)";
 
-    auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
+    const auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
     statement->BindInt64(1, primary_key);
 
     if (!this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))

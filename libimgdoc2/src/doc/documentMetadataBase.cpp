@@ -147,19 +147,23 @@ int DocumentMetadataBase::BindTypeDiscriminatorAndData(
 std::shared_ptr<IDbStatement> DocumentMetadataBase::CreateQueryForNodeIdsForPath(const std::vector<std::string_view>& path_parts)
 {
     ostringstream string_stream;
+    const auto metadata_table_name = this->GetDocument()->GetDataBaseConfigurationCommon()->GetTableNameForMetadataTableOrThrow();
+    const auto column_name_pk = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk);
+    const auto column_name_name = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Name);
+    const auto column_name_ancestor_id = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_AncestorId);
 
     if (path_parts.size() > 1)
     {
-        string_stream << "WITH RECURSIVE paths(id, name, level) as ( " <<
-            "SELECT Pk, Name,  1 from METADATA where AncestorId IS NULL AND Name=? " <<
+        string_stream << "WITH RECURSIVE paths(id, name, level) AS( " <<
+            "SELECT " << column_name_pk << "," << column_name_name << ",1 FROM [" << metadata_table_name << "] WHERE " << column_name_ancestor_id << " IS NULL AND " << column_name_name << "=? " <<
             "UNION " <<
-            "SELECT METADATA.Pk, METADATA.name,  level + 1 " <<
-            "FROM METADATA JOIN paths WHERE METADATA.AncestorId = paths.id AND " <<
+            "SELECT " << metadata_table_name << "." << column_name_pk << ", " << metadata_table_name << "." << column_name_name << ",  level + 1 " <<
+            "FROM [" << metadata_table_name << "] JOIN paths WHERE " << metadata_table_name << "." << column_name_ancestor_id << "=paths.id AND " <<
             "CASE level ";
 
         for (size_t i = 1; i < path_parts.size(); i++)
         {
-            string_stream << "WHEN " << i << " THEN METADATA.Name=? ";
+            string_stream << "WHEN " << i << " THEN " << metadata_table_name << "." << column_name_name << "=? ";
         }
 
         string_stream << "END) " <<
@@ -167,7 +171,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataBase::CreateQueryForNodeIdsForPath
     }
     else if (path_parts.size() == 1)
     {
-        string_stream << "SELECT Pk FROM METADATA WHERE AncestorId IS NULL AND Name=?;";
+        string_stream << "SELECT " << column_name_pk << " FROM " << metadata_table_name << " WHERE " << column_name_ancestor_id << " IS NULL AND " << column_name_name << "=?;";
     }
     else
     {
