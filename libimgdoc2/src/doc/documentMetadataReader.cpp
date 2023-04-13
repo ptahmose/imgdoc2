@@ -217,21 +217,3 @@ imgdoc2::DocumentMetadataItem DocumentMetadataReader::RetrieveDocumentMetadataIt
     }
     return item;
 }
-
-//bool DocumentMetadataReader::CheckIfItemExists(imgdoc2::dbIndex primary_key)
-//{
-//    ostringstream string_stream;
-//    string_stream << "SELECT EXISTS(SELECT 1 FROM [" << this->GetDocument()->GetDataBaseConfigurationCommon()->GetTableNameForMetadataTableOrThrow() << "] " << 
-//        "WHERE [" << this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk) << "]=?1)";
-//
-//    const auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
-//    statement->BindInt64(1, primary_key);
-//
-//    if (!this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))
-//    {
-//        throw internal_error_exception("DocumentMetadataReader::CheckIfItemExists: Could not execute statement.");
-//    }
-//
-//    const int64_t result = statement->GetResultInt64(0);
-//    return result == 1;
-//}
