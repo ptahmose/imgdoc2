@@ -70,6 +70,8 @@ protected:
     ///
     /// \returns    A vector containing the parts;
     static std::vector<std::string_view> SplitPath(const std::string_view& path);
+
+    bool CheckIfItemExists(imgdoc2::dbIndex primary_key);
 private:
     std::shared_ptr<IDbStatement> CreateQueryForNodeIdsForPath(const std::vector<std::string_view>& path_parts);
 };

@@ -160,7 +160,7 @@ namespace imgdoc2
         /// as a child of the node specified by 'parent'. If 'create_node_if_not_exists' is true, the
         /// node with the name 'name' is created if it does not exist. If 'create_node_if_not_exists' is
         /// false, the mode is not created if it does not exist. In this case, the method throws an
-        /// 'TODO: node_does_not_exist' exception.
+        /// non_existing_item_exception.
         ///
         /// \param  parent                      The parent node. If this is std::nullopt, it identifies the root node.
         /// \param  create_node_if_not_exists   If true, the node is created if it does not exist.

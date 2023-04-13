@@ -37,6 +37,23 @@ TEST(Metadata, CheckNodeNamesWithInvalidNamesAndExpectException)
         invalid_argument_exception);
 }
 
+TEST(Metadata, UpdateOrCreateItemWithInvalidParentKeyAndExpectException)
+{
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_writer = doc->GetDocumentMetadataWriter();
+    EXPECT_THROW(
+        metadata_writer->UpdateOrCreateItem(
+        123,
+        true,
+        "ABC",
+        DocumentMetadataType::Default,
+        IDocumentMetadataWrite::metadata_item_variant(std::monostate())),
+        non_existing_item_exception);
+}
+
 TEST(Metadata, AddMetadataItemsAndCheckIfTheyAreAdded_Scenario1)
 {
     const auto create_options = ClassFactory::CreateCreateOptionsUp();

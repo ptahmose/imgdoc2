@@ -18,6 +18,14 @@ imgdoc2::dbIndex DocumentMetadataWriter::UpdateOrCreateItem(
 {
     this->CheckNodeNameAndThrowIfInvalid(name);
     const DatabaseDataTypeValue item_type = DocumentMetadataBase::DetermineDatabaseDataTypeValueOrThrow(type, value);
+
+    if (parent.has_value() && !this->CheckIfItemExists(parent.value()))
+    {
+        ostringstream string_stream;
+        string_stream << "The parent with pk=" << parent.value() << " does not exist.";
+        throw non_existing_item_exception(string_stream.str(), parent.value());
+    }
+
     auto statement = this->CreateStatementForUpdateOrCreateItemAndBindData(create_node_if_not_exists, parent, name, item_type, value);
     this->GetDocument()->GetDatabase_connection()->Execute(statement.get());
     statement.reset();
@@ -142,7 +150,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForUpdateOr
     }
     else
     {
-        string_stream << "INSERT" << " INTO [" << metadata_table_name << "] (" <<
+        string_stream << "INSERT INTO [" << metadata_table_name << "] (" <<
             "[" << column_name_name << "]," <<
             "[" << column_name_ancestor_id << "]," <<
             "[" << column_name_type_discriminator << "]," <<
