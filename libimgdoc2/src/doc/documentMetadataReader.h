@@ -44,5 +44,12 @@ private:
     /// \returns    The document-metadata-item object populated with the information from the statement, as indicated by the flags.
     imgdoc2::DocumentMetadataItem RetrieveDocumentMetadataItemFromStatement(const std::shared_ptr<IDbStatement>& statement, imgdoc2::DocumentMetadataItemFlags flags);
 
-    std::string GetPathForNode(imgdoc2::dbIndex node_id);
+    /// Retrieve the full path for the specified node. The returned boolean indicates whether the path could be retrieved.
+    /// If e.g. the node does not exist, the path is not set and the function returns false.
+    ///
+    /// \param          node_id Primary key of the node for which the path should be retrieved.
+    /// \param [out]    path    If successful, the path for the specified node.
+    ///
+    /// \returns    True if it succeeds, false if it fails.
+    bool GetPathForNode(imgdoc2::dbIndex node_id, std::string& path);
 };

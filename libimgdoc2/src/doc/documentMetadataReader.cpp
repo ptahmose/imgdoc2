@@ -9,21 +9,49 @@ using namespace imgdoc2;
 
 /*virtual*/imgdoc2::DocumentMetadataItem DocumentMetadataReader::GetItem(imgdoc2::dbIndex primary_key, imgdoc2::DocumentMetadataItemFlags flags)
 {
-    const auto statement = this->CreateStatementForRetrievingItem(flags);
-    statement->BindInt64(1, primary_key);
+    DocumentMetadataItem item;
 
-    if (!this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))
+    // special case: if no flags are specified, we should just check if the item exists
+    if (flags == DocumentMetadataItemFlags::None)
     {
-        // this means that the tile with the specified index ('primary_key') was not found
-        ostringstream ss;
-        ss << "Request for reading a non-existing item (with pk=" << primary_key << ")";
-        throw non_existing_item_exception(ss.str(), primary_key);
+        const bool exists = this->CheckIfItemExists(primary_key);
+        if (!exists)
+        {
+            ostringstream ss;
+            ss << "The requested item (with pk=" << primary_key << ") does not exist";
+            throw non_existing_item_exception(ss.str(), primary_key);
+        }
+
+        return item;
     }
 
-    DocumentMetadataItem item = this->RetrieveDocumentMetadataItemFromStatement(statement, flags);
+    // check if we have to "retrieve data from the item" (i.e. if the caller wants to have the name, the type, or the value of the item)
+    if ((flags & (DocumentMetadataItemFlags::kPrimaryKeyValid | DocumentMetadataItemFlags::kNameValid | DocumentMetadataItemFlags::kDocumentMetadataTypeAndValueValid)) != DocumentMetadataItemFlags::None)
+    {
+        const auto statement = this->CreateStatementForRetrievingItem(flags);
+        statement->BindInt64(1, primary_key);
+
+        if (!this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))
+        {
+            // this means that the tile with the specified index ('primary_key') was not found
+            ostringstream ss;
+            ss << "Request for reading a non-existing item (with pk=" << primary_key << ")";
+            throw non_existing_item_exception(ss.str(), primary_key);
+        }
+
+        item = this->RetrieveDocumentMetadataItemFromStatement(statement, flags);
+    }
+
+    // check if we have to "retrieve the complete path" (i.e. if the caller wants to have the complete path of the item)
     if ((flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath)
     {
-        item.complete_path = this->GetPathForNode(primary_key);
+        if (!this->GetPathForNode(primary_key, item.complete_path))
+        {
+            ostringstream ss;
+            ss << "Request for reading the path of a non-existing item (with pk=" << primary_key << ")";
+            throw non_existing_item_exception(ss.str(), primary_key);
+        }
+
         item.flags = item.flags | DocumentMetadataItemFlags::kCompletePath;
     }
 
@@ -224,7 +252,7 @@ imgdoc2::DocumentMetadataItem DocumentMetadataReader::RetrieveDocumentMetadataIt
     return item;
 }
 
-std::string DocumentMetadataReader::GetPathForNode(imgdoc2::dbIndex node_id)
+bool DocumentMetadataReader::GetPathForNode(imgdoc2::dbIndex node_id, std::string& path)
 {
     /*
     Here we construct a query that will return the path for a given node. The query is constructed as follows:
@@ -277,9 +305,9 @@ std::string DocumentMetadataReader::GetPathForNode(imgdoc2::dbIndex node_id)
 
     if (!this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))
     {
-        throw internal_error_exception("DocumentMetadataReader::GetPathForNode: Could not execute statement.");
+        return false;
     }
 
-    auto result = statement->GetResultString(0);
-    return result;
+    path = statement->GetResultString(0);
+    return true;
 }

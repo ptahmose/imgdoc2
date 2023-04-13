@@ -881,7 +881,73 @@ TEST(Metadata, GetItemWithFullPathCheckResult_Scenario1)
         IDocumentMetadataWrite::metadata_item_variant("Testtext"));
 
     auto item = metadata_reader->GetItem(pk, DocumentMetadataItemFlags::kAllWithCompletePath);
-
     EXPECT_TRUE((item.flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath);
     EXPECT_STREQ(item.complete_path.c_str(), "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z");
+
+    auto item2 = metadata_reader->GetItem(pk, DocumentMetadataItemFlags::kCompletePath);
+    EXPECT_TRUE((item2.flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath);
+    EXPECT_STREQ(item2.complete_path.c_str(), "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z");
+}
+
+TEST(Metadata, GetItemWithFullPathCheckResult_Scenario2)
+{
+    // Arrange
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_reader = doc->GetDocumentMetadataReader();
+    const auto metadata_writer = doc->GetDocumentMetadataWriter();
+
+    const auto pk1 = metadata_writer->UpdateOrCreateItemForPath(
+        true,
+        true,
+        "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z",
+        DocumentMetadataType::kText,
+        IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+
+    const auto pk2 = metadata_writer->UpdateOrCreateItemForPath(
+        true,
+        true,
+        "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/YY/ZZ",
+        DocumentMetadataType::kText,
+        IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
+
+    auto item = metadata_reader->GetItem(pk1, DocumentMetadataItemFlags::kCompletePath);
+    EXPECT_TRUE((item.flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath);
+    EXPECT_STREQ(item.complete_path.c_str(), "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z");
+
+    auto item2 = metadata_reader->GetItem(pk2, DocumentMetadataItemFlags::kCompletePath);
+    EXPECT_TRUE((item2.flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath);
+    EXPECT_STREQ(item2.complete_path.c_str(), "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/YY/ZZ");
+}
+
+TEST(Metadata, GetItemForNonExistingItemTestAllFlags)
+{
+    // Arrange
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_reader = doc->GetDocumentMetadataReader();
+    const auto metadata_writer = doc->GetDocumentMetadataWriter();
+
+    const auto key = metadata_writer->UpdateOrCreateItemForPath(
+        true,
+        true,
+        "AAAABBBB",
+        DocumentMetadataType::kText,
+        IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+
+    const auto invalid_key = key + 1;
+
+    EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kAll), non_existing_item_exception);
+    EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kAllWithCompletePath), non_existing_item_exception);
+    EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::None), non_existing_item_exception);
+    EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kPrimaryKeyValid), non_existing_item_exception);
+    EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kNameValid), non_existing_item_exception);
+    EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kDocumentMetadataTypeAndValueValid), non_existing_item_exception);
+    EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kCompletePath), non_existing_item_exception);
+    EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kPrimaryKeyValid | DocumentMetadataItemFlags::kNameValid), non_existing_item_exception);
+    EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kPrimaryKeyValid | DocumentMetadataItemFlags::kNameValid | DocumentMetadataItemFlags::kDocumentMetadataTypeAndValueValid), non_existing_item_exception);
 }
