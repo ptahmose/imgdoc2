@@ -58,13 +58,15 @@ namespace imgdoc2
         IDocumentMetadata& operator=(IDocumentMetadata&&) = delete;       // move assignment
     };
 
+    /// Values that represent different pieces of information that can be retrieved from a document metadata item.
+    /// The values are a bitmask, so they can be combined using the bitwise OR operator.
     enum class DocumentMetadataItemFlags : std::uint8_t
     {
-        None = 0,
-        kPrimaryKeyValid = 1,
-        kNameValid = 2,
-        kDocumentMetadataTypeAndValueValid = 4,
-        kCompletePath = 8,
+        None = 0,               ///< An enum constant representing the "none option", meaning that no information should be retrieved or is valid.
+        kPrimaryKeyValid = 1,   ///< An enum constant representing the "primary key valid" option, meaning that the primary key is valid.
+        kNameValid = 2,         ///< An enum constant representing the "name valid" option, meaning that the name is valid.
+        kDocumentMetadataTypeAndValueValid = 4,  ///< An enum constant representing the "type and value valid" option, meaning that the "type and value" are to be retrieved or are valid.
+        kCompletePath = 8,      ///< An enum constant representing the "complete path" option, meaning that the "complete path" is to be retrieved or is valid.
 
         kAll = kPrimaryKeyValid | kNameValid | kDocumentMetadataTypeAndValueValid,
         kAllWithCompletePath = kAll | kCompletePath
@@ -98,14 +100,15 @@ namespace imgdoc2
         return static_cast<DocumentMetadataItemFlags>(~static_cast<std::underlying_type_t<DocumentMetadataItemFlags>>(x));
     }
 
+    /// This structure is used to return information about a document metadata item. The flags field specifies which pieces of information are valid.
     struct DocumentMetadataItem
     {
-        DocumentMetadataItemFlags flags{ DocumentMetadataItemFlags::None };
-        imgdoc2::dbIndex primary_key{ 0 };
-        std::string name;
-        std::string complete_path;
-        DocumentMetadataType type{ DocumentMetadataType::kInvalid };
-        IDocumentMetadata::metadata_item_variant value;
+        DocumentMetadataItemFlags flags{ DocumentMetadataItemFlags::None };             ///< The flags indicating which pieces of information are valid.
+        imgdoc2::dbIndex primary_key{ std::numeric_limits<imgdoc2::dbIndex>::max() };   ///< The primary key of the metadata item. Check the flags field to see if this is valid.
+        std::string name;                                                               ///< The name of the metadata item. Check the flags field to see if this is valid.
+        std::string complete_path;                                                      ///< The complete path of the metadata item. Check the flags field to see if this is valid.
+        DocumentMetadataType type{ DocumentMetadataType::kInvalid };                    ///< The type of the metadata item. Check the flags field to see if this is valid.
+        IDocumentMetadata::metadata_item_variant value;                                 ///< The value of the metadata item. Check the flags field to see if this is valid.
     };
 
     /// The interface for read-only access to document metadata.
@@ -198,6 +201,25 @@ namespace imgdoc2
                     DocumentMetadataType type,
                     const IDocumentMetadata::metadata_item_variant& value) = 0;
 
+        /// Updates or creates a node specified by the path 'path'. 'create_node_if_not_exists' controls if
+        /// the node is created if it does not exist. This controls the behavior if the last element of the
+        /// path. If 'create_path_if_not_exists' is true, all nodes in the path are created if they do not
+        /// exist.
+        ///
+        /// \param  create_path_if_not_exists   True to create nodes in the path if they do not exist. This refers to all nodes in the path except the last one.
+        /// \param  create_node_if_not_exists   True to create node if not exists. This refers to the last node in the path.
+        /// \param  path                        The path of the node.
+        /// \param  type                        The type of the node.
+        /// \param  value                       The value of the node.
+        ///
+        /// \returns    The primary_key of the updated or created node.
+        virtual imgdoc2::dbIndex UpdateOrCreateItemForPath(
+            bool create_path_if_not_exists,
+            bool create_node_if_not_exists,
+            const std::string& path,
+            DocumentMetadataType type,
+            const IDocumentMetadata::metadata_item_variant& value) = 0;
+
         /// Deletes the item specified by 'primary_key'. If 'recursively' is true, all child nodes are
         /// also deleted. If 'recursively' is false, the node is only deleted if it has no child nodes.
         /// The method returns the number of deleted nodes - it does not throw an exception if the
@@ -225,13 +247,6 @@ namespace imgdoc2
         virtual std::uint64_t DeleteItemForPath(
                    const std::string& path,
                    bool recursively) = 0;
-
-        virtual imgdoc2::dbIndex UpdateOrCreateItemForPath(
-                    bool create_path_if_not_exists,
-                    bool create_node_if_not_exists,
-                    const std::string& path,
-                    DocumentMetadataType type,
-                    const IDocumentMetadata::metadata_item_variant& value) = 0;
 
         // no copy and no move (-> https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#c21-if-you-define-or-delete-any-copy-move-or-destructor-function-define-or-delete-them-all )
         IDocumentMetadataWrite() = default;
