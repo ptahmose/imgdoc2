@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "documentMetadataBase.h"
+#include <string>
 #include "exceptions.h"
 #include <gsl/narrow>
 
@@ -89,7 +90,7 @@ int DocumentMetadataBase::BindTypeDiscriminatorAndData(
     DatabaseDataTypeValue type,
     const imgdoc2::IDocumentMetadata::metadata_item_variant& value)
 {
-    database_statement->BindInt32(binding_index++, (int)type);
+    database_statement->BindInt32(binding_index++, gsl::narrow_cast<int>(type));
     if (std::holds_alternative<double>(value))
     {
         database_statement->BindDouble(binding_index++, std::get<double>(value));

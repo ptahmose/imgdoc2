@@ -396,8 +396,10 @@ std::string DbCreator::GenerateSqlStatementForCreatingMetadataTable_Sqlite(const
         "[" << database_configuration_common->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueDouble) << "] REAL," <<
         "[" << database_configuration_common->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueInteger) << "] INTEGER," <<
         "[" << database_configuration_common->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueString) << "] TEXT," <<
-        "FOREIGN KEY(" << database_configuration_common->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_AncestorId) << ") REFERENCES " << database_configuration_common->GetTableNameForMetadataTableOrThrow() << "(" << database_configuration_common->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk) << "),"
-        "UNIQUE(" << database_configuration_common->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Name) << "," << database_configuration_common->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_AncestorId) << ") )" << ";"; // the combination of Name and AncestorId must be unique, in other words, the names of items with the same ancestor must be unique
+        "FOREIGN KEY(" << database_configuration_common->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_AncestorId) << ") REFERENCES " <<
+        database_configuration_common->GetTableNameForMetadataTableOrThrow() << "(" << database_configuration_common->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk) << "),"
+        "UNIQUE(" << database_configuration_common->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Name) << "," << database_configuration_common->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_AncestorId) << ") )" << ";";
+    // the combination of Name and AncestorId must be unique, in other words, the names of items with the same ancestor must be unique
 
     return string_stream.str();
 }

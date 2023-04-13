@@ -9,6 +9,8 @@
 #include <optional>
 #include <memory>
 #include <type_traits>
+#include <utility>
+#include <string>
 #include "IDocumentMetadata.h"
 #include "../db/IDbStatement.h"
 #include "document.h"

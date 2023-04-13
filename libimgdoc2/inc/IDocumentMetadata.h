@@ -8,6 +8,7 @@
 #include <string>
 #include <variant>
 #include <functional>
+#include <limits>
 #include <optional>
 #include <type_traits>
 #include "types.h"
