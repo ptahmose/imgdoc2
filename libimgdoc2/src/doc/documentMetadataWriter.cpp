@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "documentMetadataWriter.h"
-
+#include <vector>
+#include <string>
 #include "gsl/util"
 
 using namespace std;
@@ -130,7 +131,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForUpdateOr
     // CAUTION: it seems if we want to check for a NULL, we cannot simply use the "=" operator, but need to use the "IS" operator.
     //          This is because the "=" operator does not work for NULL values, and it means that we cannot use data-binding, we have to modify
     //          the query string itself. This is not a problem, but it is something to keep in mind. 
-    //          TODO(Jbl): maybe there is a better way to do this?
+    // TODO(Jbl): maybe there is a better way to do this?
     if (create_node_if_not_exists == false)
     {
         string_stream << "UPDATE [" << metadata_table_name << "] SET " <<

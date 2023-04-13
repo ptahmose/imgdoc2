@@ -5,6 +5,9 @@
 #pragma once
 
 #include <memory>
+#include <utility>
+#include <string>
+#include <vector>
 #include "IDocumentMetadata.h"
 #include "documentMetadataBase.h"
 #include "document.h"
@@ -13,7 +16,7 @@ class DocumentMetadataWriter : public DocumentMetadataBase, public imgdoc2::IDoc
 {
 public:
     DocumentMetadataWriter() = delete;
-    DocumentMetadataWriter(std::shared_ptr<Document> document) : DocumentMetadataBase(std::move(document)) {}
+    explicit DocumentMetadataWriter(std::shared_ptr<Document> document) : DocumentMetadataBase(std::move(document)) {}
     ~DocumentMetadataWriter() override = default;
 
     imgdoc2::dbIndex UpdateOrCreateItem(

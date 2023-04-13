@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "documentMetadataReader.h"
+#include <string>
 
 using namespace std;
 using namespace imgdoc2;

@@ -5,6 +5,8 @@
 #pragma once
 
 #include <memory>
+#include <utility>
+#include <string>
 #include "IDocumentMetadata.h"
 #include "document.h"
 #include "documentMetadataBase.h"
@@ -14,7 +16,7 @@ class DocumentMetadataReader : public DocumentMetadataBase, public imgdoc2::IDoc
 {
 public:
     DocumentMetadataReader() = delete;
-    DocumentMetadataReader(std::shared_ptr<Document> document) : DocumentMetadataBase(std::move(document)) {}
+    explicit DocumentMetadataReader(std::shared_ptr<Document> document) : DocumentMetadataBase(std::move(document)) {}
     ~DocumentMetadataReader() override = default;
 
     imgdoc2::DocumentMetadataItem GetItem(imgdoc2::dbIndex primary_key, imgdoc2::DocumentMetadataItemFlags flags) override;
