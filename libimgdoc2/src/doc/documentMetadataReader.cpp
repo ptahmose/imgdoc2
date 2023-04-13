@@ -268,7 +268,8 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerat
         {
             string_stream << "WITH RECURSIVE [cte](" <<
                 column_name_pk << "," << column_name_name << "," << column_name_ancestor_id << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << ",Path) AS(" <<
-                "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_ancestor_id << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << "],[" << column_name_value_string << "],[" << column_name_name << "] As Path " <<
+                "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_ancestor_id << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << 
+                "],[" << column_name_value_string << "],[" << column_name_name << "] As Path " <<
                 "FROM [" << metadata_table_name << "] ";
             if (parent_has_value)
             {
@@ -280,7 +281,8 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerat
             }
 
             string_stream << "UNION ALL " <<
-                "SELECT [c].[" << column_name_pk << "],[c].[" << column_name_name << "],[c].[" << column_name_ancestor_id << "],[c].[" << column_name_type_discriminator << "],[c].[" << column_name_value_double << "],[c].[" << column_name_value_integer << "],[c].[" << column_name_value_string << "],[cte].Path || '" << DocumentMetadataBase::kPathDelimiter_ << "' ||c." << column_name_name << " " <<
+                "SELECT [c].[" << column_name_pk << "],[c].[" << column_name_name << "],[c].[" << column_name_ancestor_id << "],[c].[" << column_name_type_discriminator << "],[c].[" << column_name_value_double << "],[c].[" << column_name_value_integer << "],[c].[" << 
+                column_name_value_string << "],[cte].Path || '" << DocumentMetadataBase::kPathDelimiter_ << "' ||c." << column_name_name << " " <<
                 "FROM [" << metadata_table_name << "] [c] " <<
                 "JOIN [cte] ON [c].[" << column_name_ancestor_id << "] = [cte].[" << column_name_pk << "]) " <<
                 "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << "],[" << column_name_value_string << "],[Path] " <<
@@ -317,7 +319,8 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerat
         {
             string_stream << "WITH RECURSIVE [cte](" <<
                 column_name_pk << "," << column_name_name << "," << column_name_ancestor_id << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << ",Path) AS(" <<
-                "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_ancestor_id << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << "],[" << column_name_value_string << "],[" << column_name_name << "] As Path " <<
+                "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_ancestor_id << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << "],[" << 
+                column_name_value_string << "],[" << column_name_name << "] As Path " <<
                 "FROM [" << metadata_table_name << "] ";
             if (parent_has_value)
             {
@@ -329,7 +332,8 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerat
             }
 
             string_stream << "UNION ALL " <<
-                "SELECT [c].[" << column_name_pk << "],[c].[" << column_name_name << "],[c].[" << column_name_ancestor_id << "],[c].[" << column_name_type_discriminator << "],[c].[" << column_name_value_double << "],[c].[" << column_name_value_integer << "],[c].[" << column_name_value_string << "],[cte].Path || '" << DocumentMetadataBase::kPathDelimiter_ << "' ||c." << column_name_name << " " <<
+                "SELECT [c].[" << column_name_pk << "],[c].[" << column_name_name << "],[c].[" << column_name_ancestor_id << "],[c].[" << column_name_type_discriminator << "],[c].[" << column_name_value_double << "],[c].[" << column_name_value_integer << "],[c].[" << 
+                column_name_value_string << "],[cte].Path || '" << DocumentMetadataBase::kPathDelimiter_ << "' ||c." << column_name_name << " " <<
                 "FROM [" << metadata_table_name << "] [c] " <<
                 "JOIN [cte] ON [c].[" << column_name_ancestor_id << "] = [cte].[" << column_name_pk << "]) " <<
                 "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << "],[" << column_name_value_string << "],[Path] " <<
