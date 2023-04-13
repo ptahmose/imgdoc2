@@ -110,52 +110,61 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForUpdateOr
     const bool parent_has_value = parent.has_value();
     ostringstream string_stream;
 
+    const auto metadata_table_name = this->GetDocument()->GetDataBaseConfigurationCommon()->GetTableNameForMetadataTableOrThrow();
+    const auto column_name_pk = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk);
+    const auto column_name_name = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Name);
+    const auto column_name_ancestor_id = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_AncestorId);
+    const auto column_name_type_discriminator = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_TypeDiscriminator);
+    const auto column_name_value_double = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueDouble);
+    const auto column_name_value_integer = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueInteger);
+    const auto column_name_value_string = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueString);
+
     // CAUTION: it seems if we want to check for a NULL, we cannot simply use the "=" operator, but need to use the "IS" operator.
     //          This is because the "=" operator does not work for NULL values, and it means that we cannot use data-binding, we have to modify
     //          the query string itself. This is not a problem, but it is something to keep in mind. 
     //          TODO(Jbl): maybe there is a better way to do this?
     if (create_node_if_not_exists == false)
     {
-        string_stream << "UPDATE [" << "METADATA" << "] SET " <<
-            "[" << "TypeDiscriminator" << "] = ?3, " <<
-            "[" << "ValueDouble" << "] = ?4, " <<
-            "[" << "ValueInteger" << "] = ?5, " <<
-            "[" << "ValueString" << "] = ?6 " <<
-            "WHERE [" << "Name" << "] = ?1 AND ";
+        string_stream << "UPDATE [" << metadata_table_name << "] SET " <<
+            "[" << column_name_type_discriminator << "] = ?3, " <<
+            "[" << column_name_value_double << "] = ?4, " <<
+            "[" << column_name_value_integer << "] = ?5, " <<
+            "[" << column_name_value_string << "] = ?6 " <<
+            "WHERE [" << column_name_name << "] = ?1 AND ";
         if (parent_has_value)
         {
-            string_stream << "[" << "AncestorId" << "] = ?2";
+            string_stream << "[" << column_name_ancestor_id << "] = ?2";
         }
         else
         {
-            string_stream << "[" << "AncestorId" << "] IS NULL";
+            string_stream << "[" << column_name_ancestor_id << "] IS NULL";
         }
     }
     else
     {
-        string_stream << "INSERT" << " INTO [" << "METADATA" << "] (" <<
-            "[" << "Name" << "]," <<
-            "[" << "AncestorId" << "]," <<
-            "[" << "TypeDiscriminator" << "]," <<
-            "[" << "ValueDouble" << "]," <<
-            "[" << "ValueInteger" << "]," <<
-            "[" << "ValueString" << "]) " <<
+        string_stream << "INSERT" << " INTO [" << metadata_table_name << "] (" <<
+            "[" << column_name_name << "]," <<
+            "[" << column_name_ancestor_id << "]," <<
+            "[" << column_name_type_discriminator << "]," <<
+            "[" << column_name_value_double << "]," <<
+            "[" << column_name_value_integer << "]," <<
+            "[" << column_name_value_string << "]) " <<
             "VALUES(" << "?1, ?2, ?3, ?4, ?5, ?6" << ") " <<
             // There is a constraint on the table that ensures that the combination of name and ancestor id is unique.
             // So, if the insert fails because of a constraint violation, we update the existing row.
-            "ON CONFLICT([" << "Name" << "], [" << "AncestorId" << "]) DO UPDATE " <<
-            "SET [" << "TypeDiscriminator" << "] = ?3, " <<
-            "[" << "ValueDouble" << "] = ?4, " <<
-            "[" << "ValueInteger" << "] = ?5, " <<
-            "[" << "ValueString" << "] = ?6 " <<
-            "WHERE [" << "Name" << "] = ?1 AND ";
+            "ON CONFLICT([" << column_name_name << "], [" << column_name_ancestor_id << "]) DO UPDATE " <<
+            "SET [" << column_name_type_discriminator << "] = ?3, " <<
+            "[" << column_name_value_double << "] = ?4, " <<
+            "[" << column_name_value_integer << "] = ?5, " <<
+            "[" << column_name_value_string << "] = ?6 " <<
+            "WHERE [" << column_name_name << "] = ?1 AND ";
         if (parent_has_value)
         {
-            string_stream << "[" << "AncestorId" << "] = ?2";
+            string_stream << "[" << column_name_ancestor_id << "] = ?2";
         }
         else
         {
-            string_stream << "[" << "AncestorId" << "] IS NULL";
+            string_stream << "[" << column_name_ancestor_id << "] IS NULL";
         }
     }
 
@@ -179,16 +188,21 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForUpdateOr
 
 std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateQueryForNameAndAncestorIdStatement(const std::string& name, std::optional<imgdoc2::dbIndex> parent)
 {
+    const auto metadata_table_name = this->GetDocument()->GetDataBaseConfigurationCommon()->GetTableNameForMetadataTableOrThrow();
+    const auto column_name_pk = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk);
+    const auto column_name_name = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Name);
+    const auto column_name_ancestor_id = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_AncestorId);
+
     const bool parent_has_value = parent.has_value();
     ostringstream string_stream;
-    string_stream << "SELECT [" << "Pk" << "] FROM [" << "METADATA" << "] WHERE [" << "Name" << "]=?1 AND ";
+    string_stream << "SELECT [" << column_name_pk << "] FROM [" << metadata_table_name << "] WHERE [" << column_name_name << "]=?1 AND ";
     if (parent_has_value)
     {
-        string_stream << "[" << "AncestorId" << "] = ?2";
+        string_stream << "[" << column_name_ancestor_id << "] = ?2";
     }
     else
     {
-        string_stream << "[" << "AncestorId" << "] IS NULL";
+        string_stream << "[" << column_name_ancestor_id << "] IS NULL";
     }
 
     string_stream << ";";
@@ -234,13 +248,18 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForDeleteIt
 {
     ostringstream string_stream;
 
+    const auto metadata_table_name = this->GetDocument()->GetDataBaseConfigurationCommon()->GetTableNameForMetadataTableOrThrow();
+    const auto column_name_pk = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk);
+    const auto column_name_name = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Name);
+    const auto column_name_ancestor_id = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_AncestorId);
+
     if (parent.has_value())
     {
         if (!recursively)
         {
-            string_stream << "DELETE FROM [" << "METADATA" << "] WHERE " <<
-                "[" << "Pk" << "]=?1 AND NOT EXISTS(" <<
-                "SELECT 1 FROM [" << "METADATA" << "] WHERE " << "[" << "AncestorId" << "]=?1" << ");";
+            string_stream << "DELETE FROM [" << metadata_table_name << "] WHERE " <<
+                "[" << column_name_pk << "]=?1 AND NOT EXISTS(" <<
+                "SELECT 1 FROM [" << metadata_table_name << "] WHERE " << "[" << column_name_ancestor_id << "]=?1" << ");";
         }
         else
         {
@@ -253,11 +272,11 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForDeleteIt
             // table that have an id that matches any of the id values returned by the children CTE, and we also delete the
             // specified node itself.
             string_stream << "WITH RECURSIVE children(id) AS (" <<
-                "SELECT [" << "Pk" << "] FROM [" << "METADATA" << "] WHERE " << "[" << "AncestorId" << "]=?1" <<
+                "SELECT [" << column_name_pk << "] FROM [" << metadata_table_name << "] WHERE " << "[" << column_name_ancestor_id << "]=?1" <<
                 "UNION ALL " <<
-                "SELECT [" << "METADATA" << "].[" << "Pk" << "] FROM [" << "METADATA" << "] JOIN children ON [" << "METADATA" << "].[" << "AncestorId" << "]=children.id" <<
+                "SELECT [" << metadata_table_name << "].[" << column_name_pk << "] FROM [" << metadata_table_name << "] JOIN children ON [" << metadata_table_name << "].[" << column_name_ancestor_id << "]=children.id" <<
                 ") " <<
-                "DELETE FROM [" << "METADATA" << "] WHERE " << "[" << "Pk" << "] IN (SELECT id FROM children) OR " << "[" << "Pk" << "]=?1;";
+                "DELETE FROM [" << metadata_table_name << "] WHERE " << "[" << "Pk" << "] IN (SELECT id FROM children) OR " << "[" << column_name_pk << "]=?1;";
         }
 
 
@@ -272,11 +291,11 @@ std::shared_ptr<IDbStatement> DocumentMetadataWriter::CreateStatementForDeleteIt
         if (recursively)
         {
             string_stream << "WITH RECURSIVE children(id) AS (" <<
-                "SELECT [" << "Pk" << "] FROM [" << "METADATA" << "] WHERE " << "[" << "AncestorId" << "] IS NULL " <<
+                "SELECT [" << column_name_pk << "] FROM [" << metadata_table_name << "] WHERE " << "[" << column_name_ancestor_id << "] IS NULL " <<
                 "UNION ALL " <<
-                "SELECT [" << "METADATA" << "].[" << "Pk" << "] FROM [" << "METADATA" << "] JOIN children ON [" << "METADATA" << "].[" << "AncestorId" << "]=children.id" <<
+                "SELECT [" << metadata_table_name << "].[" << column_name_pk << "] FROM [" << metadata_table_name << "] JOIN children ON [" << metadata_table_name << "].[" << column_name_ancestor_id << "]=children.id" <<
                 ") " <<
-                "DELETE FROM [" << "METADATA" << "] WHERE " << "[" << "Pk" << "] IN (SELECT id FROM children) OR " << "[" << "AncestorId" << "] IS NULL;";
+                "DELETE FROM [" << metadata_table_name << "] WHERE " << "[" << column_name_pk << "] IN (SELECT id FROM children) OR " << "[" << column_name_ancestor_id << "] IS NULL;";
 
             return this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
         }
