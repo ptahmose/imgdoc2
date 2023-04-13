@@ -994,7 +994,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario1)
     bool all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             return (i.flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath;
         });
@@ -1003,7 +1003,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario1)
     all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             if (i.name == "A")
             {
@@ -1161,7 +1161,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
     bool all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             return (i.flags & (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid)) == (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid);
         });
@@ -1169,7 +1169,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
     all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             if (i.name == "A")
             {
@@ -1219,7 +1219,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
     all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             return (i.flags & (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid)) == (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid);
         });
@@ -1227,7 +1227,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
     all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             if (i.name == "E")
             {
@@ -1261,7 +1261,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
     all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             return (i.flags & (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid)) == (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid);
         });
@@ -1269,7 +1269,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
     all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             if (i.name == "C")
             {
@@ -1303,7 +1303,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
     all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             return (i.flags & (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid)) == (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid);
         });
@@ -1311,7 +1311,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
     all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             if (i.name == "C")
             {
@@ -1353,7 +1353,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
     all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             return (i.flags & (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid)) == (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid);
         });
@@ -1361,7 +1361,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
     all_true = all_of(
         results.begin(),
         results.end(),
-        [](DocumentMetadataItem& i)
+        [](const DocumentMetadataItem& i)
         {
             if (i.name == "B")
             {
