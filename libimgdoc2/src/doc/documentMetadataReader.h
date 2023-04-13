@@ -32,7 +32,20 @@ public:
 
 private:
     std::shared_ptr<IDbStatement> CreateStatementForRetrievingItem(imgdoc2::DocumentMetadataItemFlags flags);
-    std::shared_ptr<IDbStatement> CreateStatementForEnumerateAllItemsWithAncestorAndDataBind(bool recursive, std::optional<imgdoc2::dbIndex> parent);
+
+    /// Creates statement which gives the items for which the given item is an ancestor. If recursive is false, then
+    /// only items for which the given item is the direct parent are returned. If recursive is true, then all items
+    /// for which the given item is an ancestor are returned.
+    /// The result of this statements gives in column 0 the primary key of the item, in column 1 the name of the item, in column 2 the type discriminator, 
+    /// in column 3 the value double, in column 4 the value integer and in column 5 the value string.
+    /// If the include_path flag is true, then the complete path of the item is included in the result as column 6.
+    ///
+    /// \param  recursive       True to query only items for the 'parent' is the direct ancestor, false to include all items (for which the 'parent' is direct or indirect ancestor).
+    /// \param  include_path    True to include a sixth column containing the complete path of the item; false otherwise.
+    /// \param  parent          The node to search for (being an ancestor). If nullopt, this means "root node".
+    ///
+    /// \returns    The statement.
+    std::shared_ptr<IDbStatement> CreateStatementForEnumerateAllItemsWithAncestorAndDataBind(bool recursive,  bool include_path, std::optional<imgdoc2::dbIndex> parent);
 
     /// Retrieves a document-metadata-item object from a statement. The precondition is that the statement has been executed and the result is ready.
     /// We expect at column 0 the primary key, column 1 the Name, at column 2 the TypeDiscriminator, at column 3 the ValueDouble, at column 4 the ValueInteger and

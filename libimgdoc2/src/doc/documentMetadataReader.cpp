@@ -79,7 +79,10 @@ void DocumentMetadataReader::EnumerateItems(
   DocumentMetadataItemFlags flags,
   const std::function<bool(imgdoc2::dbIndex, const DocumentMetadataItem& item)>& func)
 {
-    const auto statement = this->CreateStatementForEnumerateAllItemsWithAncestorAndDataBind(recursive, parent);
+    const auto statement = this->CreateStatementForEnumerateAllItemsWithAncestorAndDataBind(
+        recursive,
+        (flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath,
+        parent);
 
     bool at_least_one_item_found = false;
     while (this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))
@@ -144,8 +147,82 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForRetrievi
     return statement;
 }
 
-std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerateAllItemsWithAncestorAndDataBind(bool recursive, std::optional<imgdoc2::dbIndex> parent)
+std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerateAllItemsWithAncestorAndDataBind(bool recursive, bool include_path, std::optional<imgdoc2::dbIndex> parent)
 {
+    /* If we want to create "full-path" (include_path=true) for the items, we use a query like this:
+
+    WITH RECURSIVE
+      [cte](Pk,Name,AncestorId,TypeDiscriminator,ValueDouble,ValueInteger,ValueString,Path) AS(
+        SELECT
+               [Pk],
+               [Name],
+               [AncestorId],
+               [TypeDiscriminator],
+               [ValueDouble],
+               [ValueInteger],
+               [ValueString],
+               [Name] As Path
+        FROM   [METADATA]
+        WHERE  [AncestorId] IS NULL
+        UNION ALL
+        SELECT
+               [c].[Pk],
+               [c].[Name],
+               [c].[AncestorId],
+               [c].[TypeDiscriminator],
+               [c].[ValueDouble],
+               [c].[ValueInteger],
+               [c].[ValueString],
+               [cte].Path || '/' ||c.Name
+        FROM   [METADATA] [c]
+               JOIN [cte] ON [c].[AncestorId] = [cte].[Pk]
+      )
+    SELECT
+           [Pk],
+           [Name],
+           [TypeDiscriminator],
+           [ValueDouble],
+           [ValueInteger],
+           [ValueString],
+           [Path]
+    FROM   [cte];
+
+    If the path is not required, we can use a simpler query:
+
+    WITH RECURSIVE
+      [cte] AS(
+        SELECT
+               [Pk],
+               [Name],
+               [AncestorId],
+               [TypeDiscriminator],
+               [ValueDouble],
+               [ValueInteger],
+               [ValueString],
+        FROM   [METADATA]
+        WHERE  [AncestorId] IS NULL
+        UNION ALL
+        SELECT
+               [c].[Pk],
+               [c].[Name],
+               [c].[AncestorId],
+               [c].[TypeDiscriminator],
+               [c].[ValueDouble],
+               [c].[ValueInteger],
+               [c].[ValueString],
+        FROM   [METADATA] [c]
+               JOIN [cte] ON [c].[AncestorId] = [cte].[Pk]
+      )
+    SELECT
+           [Pk],
+           [Name],
+           [TypeDiscriminator],
+           [ValueDouble],
+           [ValueInteger],
+           [ValueString],
+    FROM   [cte];
+   
+     */
     const bool parent_has_value = parent.has_value();
     ostringstream string_stream;
 
@@ -160,40 +237,98 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerat
 
     if (recursive)
     {
-        string_stream <<
-            "WITH RECURSIVE cte AS(" <<
-            "SELECT " << column_name_pk << "," << column_name_name << "," << column_name_ancestor_id << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << " " <<
-            "FROM [" << metadata_table_name << "] ";
-
-        if (parent_has_value)
+        if (include_path)
         {
-            string_stream << "WHERE " << column_name_ancestor_id << "=?1 ";
+            string_stream << "WITH RECURSIVE [cte](" <<
+                column_name_pk << "," << column_name_name << "," << column_name_ancestor_id << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << ",Path) AS(" <<
+                "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_ancestor_id << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << "],[" << column_name_value_string << "],[" << column_name_name << "] As Path " <<
+                "FROM [" << metadata_table_name << "] ";
+            if (parent_has_value)
+            {
+                string_stream << "WHERE " << column_name_ancestor_id << "=?1 ";
+            }
+            else
+            {
+                string_stream << "WHERE " << column_name_ancestor_id << " IS NULL ";
+            }
+
+            string_stream << "UNION ALL " <<
+                "SELECT [c].[" << column_name_pk << "],[c].[" << column_name_name << "],[c].[" << column_name_ancestor_id << "],[c].[" << column_name_type_discriminator << "],[c].[" << column_name_value_double << "],[c].[" << column_name_value_integer << "],[c].[" << column_name_value_string << "],[cte].Path || '" << DocumentMetadataBase::kPathDelimiter_ << "' ||c." << column_name_name << " " <<
+                "FROM [" << metadata_table_name << "] [c] " <<
+                "JOIN [cte] ON [c].[" << column_name_ancestor_id << "] = [cte].[" << column_name_pk << "]) " <<
+                "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << "],[" << column_name_value_string << "],[Path] " <<
+                "FROM [cte];";
         }
         else
         {
-            string_stream << "WHERE " << column_name_ancestor_id << " IS NULL ";
-        }
+            string_stream <<
+                "WITH RECURSIVE cte AS(" <<
+                "SELECT " << column_name_pk << "," << column_name_name << "," << column_name_ancestor_id << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << " " <<
+                "FROM [" << metadata_table_name << "] ";
 
-        string_stream <<
-            "UNION ALL " <<
-            "SELECT c." << column_name_pk << ",c." << column_name_name << ",c." << column_name_ancestor_id << ",c." << column_name_type_discriminator << ",c." << column_name_value_double << ",c." << column_name_value_integer << ",c." << column_name_value_string << " " <<
-            "FROM [" << metadata_table_name << "] c " <<
-            "JOIN cte ON c." << column_name_ancestor_id << "=cte." << column_name_pk << " " <<
-            ") " <<
-            "SELECT " << column_name_pk << "," << column_name_name << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << " FROM cte;";
+            if (parent_has_value)
+            {
+                string_stream << "WHERE " << column_name_ancestor_id << "=?1 ";
+            }
+            else
+            {
+                string_stream << "WHERE " << column_name_ancestor_id << " IS NULL ";
+            }
+
+            string_stream <<
+                "UNION ALL " <<
+                "SELECT c." << column_name_pk << ",c." << column_name_name << ",c." << column_name_ancestor_id << ",c." << column_name_type_discriminator << ",c." << column_name_value_double << ",c." << column_name_value_integer << ",c." << column_name_value_string << " " <<
+                "FROM [" << metadata_table_name << "] c " <<
+                "JOIN cte ON c." << column_name_ancestor_id << "=cte." << column_name_pk << " " <<
+                ") " <<
+                "SELECT " << column_name_pk << "," << column_name_name << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << " FROM cte;";
+        }
     }
     else
     {
-        string_stream <<
-            "SELECT " << column_name_pk << "," << column_name_name << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << " FROM [" << metadata_table_name << "] ";
-
-        if (parent_has_value)
+        if (include_path)
         {
-            string_stream << "WHERE " << column_name_ancestor_id << "=?1 ";
+            string_stream << "WITH RECURSIVE [cte](" <<
+                  column_name_pk << "," << column_name_name << "," << column_name_ancestor_id << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << ",Path) AS(" <<
+                  "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_ancestor_id << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << "],[" << column_name_value_string << "],[" << column_name_name << "] As Path " <<
+                  "FROM [" << metadata_table_name << "] ";
+            if (parent_has_value)
+            {
+                string_stream << "WHERE " << column_name_ancestor_id << "=?1 ";
+            }
+            else
+            {
+                string_stream << "WHERE " << column_name_ancestor_id << " IS NULL ";
+            }
+
+            string_stream << "UNION ALL " <<
+                "SELECT [c].[" << column_name_pk << "],[c].[" << column_name_name << "],[c].[" << column_name_ancestor_id << "],[c].[" << column_name_type_discriminator << "],[c].[" << column_name_value_double << "],[c].[" << column_name_value_integer << "],[c].[" << column_name_value_string << "],[cte].Path || '" << DocumentMetadataBase::kPathDelimiter_ << "' ||c." << column_name_name << " " <<
+                "FROM [" << metadata_table_name << "] [c] " <<
+                "JOIN [cte] ON [c].[" << column_name_ancestor_id << "] = [cte].[" << column_name_pk << "]) " <<
+                "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << "],[" << column_name_value_string << "],[Path] " <<
+                "FROM [cte] ";
+            if (parent_has_value)
+            {
+                string_stream << "WHERE " << column_name_ancestor_id << "=?1;";
+            }
+            else
+            {
+                string_stream << "WHERE " << column_name_ancestor_id << " IS NULL;";
+            }
         }
         else
         {
-            string_stream << "WHERE " << column_name_ancestor_id << " IS NULL ";
+            string_stream <<
+                "SELECT " << column_name_pk << "," << column_name_name << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << " FROM [" << metadata_table_name << "] ";
+
+            if (parent_has_value)
+            {
+                string_stream << "WHERE " << column_name_ancestor_id << "=?1 ";
+            }
+            else
+            {
+                string_stream << "WHERE " << column_name_ancestor_id << " IS NULL ";
+            }
         }
     }
 
@@ -249,6 +384,12 @@ imgdoc2::DocumentMetadataItem DocumentMetadataReader::RetrieveDocumentMetadataIt
                 throw runtime_error("DocumentMetadataReader::GetItem: Unknown data type");
         }
     }
+
+    if ((flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath)
+    {
+        item.complete_path = statement->GetResultString(6);
+    }
+
     return item;
 }
 

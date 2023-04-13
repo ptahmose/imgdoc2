@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <random>
+#include <algorithm>
 #include "../libimgdoc2/inc/imgdoc2.h"
 
 using namespace std;
@@ -950,4 +951,166 @@ TEST(Metadata, GetItemForNonExistingItemTestAllFlags)
     EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kCompletePath), non_existing_item_exception);
     EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kPrimaryKeyValid | DocumentMetadataItemFlags::kNameValid), non_existing_item_exception);
     EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kPrimaryKeyValid | DocumentMetadataItemFlags::kNameValid | DocumentMetadataItemFlags::kDocumentMetadataTypeAndValueValid), non_existing_item_exception);
+}
+
+TEST(Metadata, EnumerateItemsFullPathCheckResult)
+{
+    // Arrange
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_reader = doc->GetDocumentMetadataReader();
+    const auto metadata_writer = doc->GetDocumentMetadataWriter();
+
+    metadata_writer->UpdateOrCreateItemForPath(
+        true,
+        true,
+        "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z",
+        DocumentMetadataType::kText,
+        IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+
+    vector<DocumentMetadataItem> results;
+    metadata_reader->EnumerateItems(nullopt, false, DocumentMetadataItemFlags::kAllWithCompletePath,
+        [&results](const auto pk, const auto item)
+        {
+            results.push_back(item);
+            return true;
+        });
+
+    EXPECT_EQ(results.size(), 1);
+    EXPECT_EQ(results.at(0).flags & DocumentMetadataItemFlags::kCompletePath, DocumentMetadataItemFlags::kCompletePath);
+    EXPECT_STREQ(results.at(0).complete_path.c_str(), "A");
+
+    results.clear();
+    metadata_reader->EnumerateItems(nullopt, true, DocumentMetadataItemFlags::kAllWithCompletePath,
+        [&results](const auto pk, const auto item)
+        {
+            results.push_back(item);
+            return true;
+        });
+
+    EXPECT_EQ(results.size(), 26);
+    bool all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            return (i.flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath;
+        });
+    EXPECT_TRUE(all_true);
+
+    all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            if (i.name == "A")
+            {
+                return i.complete_path == "A";
+            }
+            else if (i.name == "B")
+            {
+                return i.complete_path == "A/B";
+            }
+            else if (i.name == "C")
+            {
+                return i.complete_path == "A/B/C";
+            }
+            else if (i.name == "D")
+            {
+                return i.complete_path == "A/B/C/D";
+            }
+            else if (i.name == "E")
+            {
+                return i.complete_path == "A/B/C/D/E";
+            }
+            else if (i.name == "F")
+            {
+                return i.complete_path == "A/B/C/D/E/F";
+            }
+            else if (i.name == "G")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G";
+            }
+            else if (i.name == "H")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H";
+            }
+            else if (i.name == "I")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I";
+            }
+            else if (i.name == "J")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J";
+            }
+            else if (i.name == "K")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K";
+            }
+            else if (i.name == "L")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L";
+            }
+            else if (i.name == "M")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M";
+            }
+            else if (i.name == "N")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N";
+            }
+            else if (i.name == "O")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O";
+            }
+            else if (i.name == "P")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P";
+            }
+            else if (i.name == "Q")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q";
+            }
+            else if (i.name == "R")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R";
+            }
+            else if (i.name == "S")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S";
+            }
+            else if (i.name == "T")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T";
+            }
+            else if (i.name == "U")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U";
+            }
+            else if (i.name == "V")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V";
+            }
+            else if (i.name == "W")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W";
+            }
+            else if (i.name == "X")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X";
+            }
+            else if (i.name == "Y")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y";
+            }
+            else if (i.name == "Z")
+            {
+                return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z";
+            }
+
+            return false;
+        });
+    EXPECT_TRUE(all_true);
 }
