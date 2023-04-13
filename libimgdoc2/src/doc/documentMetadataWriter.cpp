@@ -246,7 +246,7 @@ void DocumentMetadataWriter::CreateMissingNodesOnPath(const std::vector<std::str
             i > 0 ? std::optional<imgdoc2::dbIndex>(pks_existing[i - 1]) : std::optional<imgdoc2::dbIndex>(),
             true,
             string{ path_parts[i] },
-            DocumentMetadataType::Null,
+            DocumentMetadataType::kNull,
             std::monostate());
         pks_existing.push_back(new_node);
     }

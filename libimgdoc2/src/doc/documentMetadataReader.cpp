@@ -193,23 +193,23 @@ imgdoc2::DocumentMetadataItem DocumentMetadataReader::RetrieveDocumentMetadataIt
         {
             case DatabaseDataTypeValue::null:
                 item.value = std::monostate();
-                item.type = DocumentMetadataType::Null;
+                item.type = DocumentMetadataType::kNull;
                 break;
             case DatabaseDataTypeValue::int32:
                 item.value = IDocumentMetadataWrite::metadata_item_variant(statement->GetResultInt32(4));
-                item.type = DocumentMetadataType::Int32;
+                item.type = DocumentMetadataType::kInt32;
                 break;
             case DatabaseDataTypeValue::doublefloat:
                 item.value = IDocumentMetadataWrite::metadata_item_variant(statement->GetResultDouble(3));
-                item.type = DocumentMetadataType::Double;
+                item.type = DocumentMetadataType::kDouble;
                 break;
             case DatabaseDataTypeValue::utf8string:
                 item.value = IDocumentMetadataWrite::metadata_item_variant(statement->GetResultString(5));
-                item.type = DocumentMetadataType::Text;
+                item.type = DocumentMetadataType::kText;
                 break;
             case DatabaseDataTypeValue::json:
                 item.value = IDocumentMetadataWrite::metadata_item_variant(statement->GetResultString(5));
-                item.type = DocumentMetadataType::Json;
+                item.type = DocumentMetadataType::kJson;
                 break;
             default:
                 throw runtime_error("DocumentMetadataReader::GetItem: Unknown data type");

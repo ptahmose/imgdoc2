@@ -18,22 +18,27 @@ namespace imgdoc2
     enum class DocumentMetadataType : std::uint8_t
     {
         /// An enum constant representing the invalid option. This value is not legal for any call into the document metadata API.
-        Invalid = 0,        
+        kInvalid = 0,        
 
         /// An enum constant representing the default option.Default means that the type is determined from the value variant.
         /// The mapping is as follows: If the value variant is std::monostate, the type is set to Invalid. If the value variant is a string, the type is set to Text. 
         /// If the value variant is int32_t, the type is set to Int32. If the value variant is double, the type is set to Double. 
-        Default,
+        kDefault,
 
         /// An enum constant representing the invalid option. This means that there is no value stored for this metadata item.
-        Null,
+        kNull,
 
         /// An enum constant representing the 'text' option. The value variant must contain a string.
-        Text,
-        Int32,
-        Json,
-        Double
+        kText,
 
+        /// An enum constant representing the 'int32' option. The value variant must contain an int32.
+        kInt32,
+
+        /// An enum constant representing the 'JSON' option. The value variant must contain a string, and this string must be valid JSON.
+        kJson,
+
+        /// An enum constant representing the 'double' option. The value variant must contain a double.
+        kDouble
     };
 
     /// Base interface for document metadata.
@@ -82,7 +87,7 @@ namespace imgdoc2
         DocumentMetadataItemFlags flags{ DocumentMetadataItemFlags::None };
         imgdoc2::dbIndex primary_key{ 0 };
         std::string name;
-        DocumentMetadataType type{ DocumentMetadataType::Invalid };
+        DocumentMetadataType type{ DocumentMetadataType::kInvalid };
         IDocumentMetadata::metadata_item_variant value;
     };
 

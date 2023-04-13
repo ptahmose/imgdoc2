@@ -29,7 +29,7 @@ DocumentMetadataBase::DatabaseDataTypeValue DocumentMetadataBase::DetermineDatab
 
     switch (type)
     {
-        case DocumentMetadataType::Text:
+        case DocumentMetadataType::kText:
             // in this case the value must contain a string
             if (!std::holds_alternative<std::string>(value))
             {
@@ -37,7 +37,7 @@ DocumentMetadataBase::DatabaseDataTypeValue DocumentMetadataBase::DetermineDatab
             }
 
             return DatabaseDataTypeValue::utf8string;
-        case DocumentMetadataType::Int32:
+        case DocumentMetadataType::kInt32:
             // in this case the value must contain an integer
             if (!std::holds_alternative<int>(value))
             {
@@ -45,7 +45,7 @@ DocumentMetadataBase::DatabaseDataTypeValue DocumentMetadataBase::DetermineDatab
             }
 
             return DatabaseDataTypeValue::int32;
-        case DocumentMetadataType::Double:
+        case DocumentMetadataType::kDouble:
             // in this case the value must contain a double
             if (!std::holds_alternative<double>(value))
             {
@@ -53,7 +53,7 @@ DocumentMetadataBase::DatabaseDataTypeValue DocumentMetadataBase::DetermineDatab
             }
 
             return DatabaseDataTypeValue::doublefloat;
-        case DocumentMetadataType::Json:
+        case DocumentMetadataType::kJson:
             // in this case the value must contain a string
             if (!std::holds_alternative<string>(value))
             {
@@ -61,7 +61,7 @@ DocumentMetadataBase::DatabaseDataTypeValue DocumentMetadataBase::DetermineDatab
             }
 
             return DatabaseDataTypeValue::json;
-        case DocumentMetadataType::Default:
+        case DocumentMetadataType::kDefault:
             if (std::holds_alternative<std::string>(value))
             {
                 return DatabaseDataTypeValue::utf8string;
