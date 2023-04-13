@@ -87,18 +87,18 @@ TEST(Metadata, AddMetadataItemsAndCheckIfTheyAreAdded_Scenario1)
         IDocumentMetadataWrite::metadata_item_variant("Testtext"));
 
     const auto metadata_reader = doc->GetDocumentMetadataReader();
-    auto item = metadata_reader->GetItem(pk_node1, DocumentMetadataItemFlags::All);
+    auto item = metadata_reader->GetItem(pk_node1, DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(item.name.c_str(), "Node1");
     EXPECT_EQ(item.type, DocumentMetadataType::kNull);
-    item = metadata_reader->GetItem(pk_node1_1, DocumentMetadataItemFlags::All);
+    item = metadata_reader->GetItem(pk_node1_1, DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(item.name.c_str(), "Node1_1");
     EXPECT_EQ(item.type, DocumentMetadataType::kDouble);
     EXPECT_DOUBLE_EQ(get<double>(item.value), 1.234);
-    item = metadata_reader->GetItem(pk_node1_2, DocumentMetadataItemFlags::All);
+    item = metadata_reader->GetItem(pk_node1_2, DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(item.name.c_str(), "Node1_2");
     EXPECT_EQ(item.type, DocumentMetadataType::kInt32);
     EXPECT_EQ(get<int32_t>(item.value), 1234);
-    item = metadata_reader->GetItem(pk_node1_3, DocumentMetadataItemFlags::All);
+    item = metadata_reader->GetItem(pk_node1_3, DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(item.name.c_str(), "Node1_3");
     EXPECT_EQ(item.type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(item.value).c_str(), "Testtext");
@@ -137,18 +137,18 @@ TEST(Metadata, AddMetadataItemsAndCheckIfTheyAreAdded_Scenario2)
         IDocumentMetadataWrite::metadata_item_variant("Testtext"));
 
     const auto metadata_reader = doc->GetDocumentMetadataReader();
-    auto item = metadata_reader->GetItemForPath("A", DocumentMetadataItemFlags::All);
+    auto item = metadata_reader->GetItemForPath("A", DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(item.name.c_str(), "A");
     EXPECT_EQ(item.type, DocumentMetadataType::kNull);
-    item = metadata_reader->GetItemForPath("A/B", DocumentMetadataItemFlags::All);
+    item = metadata_reader->GetItemForPath("A/B", DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(item.name.c_str(), "B");
     EXPECT_EQ(item.type, DocumentMetadataType::kDouble);
     EXPECT_DOUBLE_EQ(get<double>(item.value), 1.234);
-    item = metadata_reader->GetItemForPath("A/B/C", DocumentMetadataItemFlags::All);
+    item = metadata_reader->GetItemForPath("A/B/C", DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(item.name.c_str(), "C");
     EXPECT_EQ(item.type, DocumentMetadataType::kInt32);
     EXPECT_EQ(get<int32_t>(item.value), 1234);
-    item = metadata_reader->GetItemForPath("A/B/C/D", DocumentMetadataItemFlags::All);
+    item = metadata_reader->GetItemForPath("A/B/C/D", DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(item.name.c_str(), "D");
     EXPECT_EQ(item.type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(item.value).c_str(), "Testtext");
@@ -170,15 +170,15 @@ TEST(Metadata, AddMetadataItemsWithPathAndCheckIfTheyAreAdded_Scenario1)
     EXPECT_NE(id1, id3);
 
     const auto metadata_reader = doc->GetDocumentMetadataReader();
-    auto item = metadata_reader->GetItemForPath("A/B/C", DocumentMetadataItemFlags::All);
+    auto item = metadata_reader->GetItemForPath("A/B/C", DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(item.name.c_str(), "C");
     EXPECT_EQ(item.type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(item.value).c_str(), "Testtext");
-    item = metadata_reader->GetItemForPath("A/B/D", DocumentMetadataItemFlags::All);
+    item = metadata_reader->GetItemForPath("A/B/D", DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(item.name.c_str(), "D");
     EXPECT_EQ(item.type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(item.value).c_str(), "Testtext2");
-    item = metadata_reader->GetItemForPath("A/X/Y", DocumentMetadataItemFlags::All);
+    item = metadata_reader->GetItemForPath("A/X/Y", DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(item.name.c_str(), "Y");
     EXPECT_EQ(item.type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(item.value).c_str(), "Testtext3");
@@ -210,7 +210,7 @@ TEST(Metadata, EnumerateItems_Scenario1)
     metadata_reader->EnumerateItems(
         nullopt,
         true,
-        DocumentMetadataItemFlags::All,
+        DocumentMetadataItemFlags::kAll,
         [&items](const auto pk, const auto item) { items.push_back(pk); return true; });
 
     // Assert
@@ -248,7 +248,7 @@ TEST(Metadata, EnumerateItems_Scenario2)
     metadata_reader->EnumerateItems(
         id_item_b,
         false,
-        DocumentMetadataItemFlags::All,
+        DocumentMetadataItemFlags::kAll,
         [&primary_keys, &items](const auto pk, const auto item) ->bool
         {
             primary_keys.push_back(pk);
@@ -264,7 +264,7 @@ TEST(Metadata, EnumerateItems_Scenario2)
     auto result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id1; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     size_t index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "C");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext");
@@ -273,7 +273,7 @@ TEST(Metadata, EnumerateItems_Scenario2)
     result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id2; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "D");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext2");
@@ -312,7 +312,7 @@ TEST(Metadata, EnumerateItems_Scenario3)
     metadata_reader->EnumerateItems(
         id_item_b,
         false,                                      // Note: we instruct "recursive=false", so we expect only the the two direct leaf nodes of 'B' - 'C' and 'D'
-        DocumentMetadataItemFlags::All,
+        DocumentMetadataItemFlags::kAll,
         [&primary_keys, &items](const auto pk, const auto item) ->bool
         {
             primary_keys.push_back(pk);
@@ -328,7 +328,7 @@ TEST(Metadata, EnumerateItems_Scenario3)
     auto result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id1; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     size_t index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "C");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext");
@@ -337,7 +337,7 @@ TEST(Metadata, EnumerateItems_Scenario3)
     result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id2; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "D");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext2");
@@ -376,7 +376,7 @@ TEST(Metadata, EnumerateItems_Scenario4)
     metadata_reader->EnumerateItems(
         id_item_b,
         true,                                      // Note: we instruct "recursive=true", so we expect to have all 4 leaf nodes of 'B' : 'C', 'D', 'E' and 'F'
-        DocumentMetadataItemFlags::All,
+        DocumentMetadataItemFlags::kAll,
         [&primary_keys, &items](const auto pk, const auto item) ->bool
         {
             primary_keys.push_back(pk);
@@ -392,7 +392,7 @@ TEST(Metadata, EnumerateItems_Scenario4)
     auto result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id1; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     size_t index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "C");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext");
@@ -401,7 +401,7 @@ TEST(Metadata, EnumerateItems_Scenario4)
     result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id2; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "D");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext2");
@@ -410,7 +410,7 @@ TEST(Metadata, EnumerateItems_Scenario4)
     result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id3; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "E");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext3");
@@ -419,7 +419,7 @@ TEST(Metadata, EnumerateItems_Scenario4)
     result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id4; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "F");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext4");
@@ -452,7 +452,7 @@ TEST(Metadata, EnumerateItemsForPath_Scenario1)
     metadata_reader->EnumerateItemsForPath(
         "",
         true,
-        DocumentMetadataItemFlags::All,
+        DocumentMetadataItemFlags::kAll,
         [&items](const auto pk, const auto item) { items.push_back(pk); return true; });
 
     // Assert
@@ -490,7 +490,7 @@ TEST(Metadata, EnumerateItemsForPath_Scenario2)
     metadata_reader->EnumerateItemsForPath(
         "A/B",
         false,
-        DocumentMetadataItemFlags::All,
+        DocumentMetadataItemFlags::kAll,
         [&primary_keys, &items](const auto pk, const auto item) ->bool
         {
             primary_keys.push_back(pk);
@@ -506,7 +506,7 @@ TEST(Metadata, EnumerateItemsForPath_Scenario2)
     auto result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id1; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     size_t index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "C");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext");
@@ -515,7 +515,7 @@ TEST(Metadata, EnumerateItemsForPath_Scenario2)
     result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id2; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "D");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext2");
@@ -554,7 +554,7 @@ TEST(Metadata, EnumerateItemsForPath_Scenario3)
     metadata_reader->EnumerateItemsForPath(
         "A/B",
         false,                                      // Note: we instruct "recursive=false", so we expect only the the two direct leaf nodes of 'B' - 'C' and 'D'
-        DocumentMetadataItemFlags::All,
+        DocumentMetadataItemFlags::kAll,
         [&primary_keys, &items](const auto pk, const auto item) ->bool
         {
             primary_keys.push_back(pk);
@@ -570,7 +570,7 @@ TEST(Metadata, EnumerateItemsForPath_Scenario3)
     auto result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id1; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     size_t index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "C");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext");
@@ -579,7 +579,7 @@ TEST(Metadata, EnumerateItemsForPath_Scenario3)
     result_item_iterator = find_if(primary_keys.begin(), primary_keys.end(), [=](const auto& pk) { return pk == id2; });
     ASSERT_NE(result_item_iterator, primary_keys.end());
     index = distance(primary_keys.begin(), result_item_iterator);
-    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::All) == DocumentMetadataItemFlags::All);
+    EXPECT_TRUE((items[index].flags & DocumentMetadataItemFlags::kAll) == DocumentMetadataItemFlags::kAll);
     EXPECT_STREQ(items[index].name.c_str(), "D");
     ASSERT_EQ(items[index].type, DocumentMetadataType::kText);
     EXPECT_STREQ(get<string>(items[index].value).c_str(), "Testtext2");
@@ -790,11 +790,11 @@ TEST(Metadata, InvalidPathWithGetItem)
     const auto doc = ClassFactory::CreateNew(create_options.get());
     const auto metadata_reader = doc->GetDocumentMetadataReader();
 
-    EXPECT_THROW(metadata_reader->GetItemForPath("/test", DocumentMetadataItemFlags::All), invalid_path_exception);
-    EXPECT_THROW(metadata_reader->GetItemForPath("test//", DocumentMetadataItemFlags::All), invalid_path_exception);
-    EXPECT_THROW(metadata_reader->GetItemForPath("test/", DocumentMetadataItemFlags::All), invalid_path_exception);
-    EXPECT_THROW(metadata_reader->GetItemForPath("test//abc", DocumentMetadataItemFlags::All), invalid_path_exception);
-    EXPECT_THROW(metadata_reader->GetItemForPath("abc/def//ghi", DocumentMetadataItemFlags::All), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("/test", DocumentMetadataItemFlags::kAll), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("test//", DocumentMetadataItemFlags::kAll), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("test/", DocumentMetadataItemFlags::kAll), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("test//abc", DocumentMetadataItemFlags::kAll), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("abc/def//ghi", DocumentMetadataItemFlags::kAll), invalid_path_exception);
 }
 
 TEST(Metadata, CallGetItemForNonExistingItemAndExpectError)
@@ -816,7 +816,7 @@ TEST(Metadata, CallGetItemForNonExistingItemAndExpectError)
 
     const auto invalid_key = key + 1;
 
-    EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::All), non_existing_item_exception);
+    EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kAll), non_existing_item_exception);
 }
 
 TEST(Metadata, CallGetItemForPathForNonExistingItemAndExpectError)
@@ -837,9 +837,9 @@ TEST(Metadata, CallGetItemForPathForNonExistingItemAndExpectError)
         IDocumentMetadataWrite::metadata_item_variant("Testtext"));
 
     // Act & Assert
-    EXPECT_THROW(metadata_reader->GetItemForPath("AAAABBBB/QQQ", DocumentMetadataItemFlags::All), invalid_path_exception);
-    EXPECT_THROW(metadata_reader->GetItemForPath("AAAABBBB//QQQ", DocumentMetadataItemFlags::All), invalid_path_exception);
-    EXPECT_THROW(metadata_reader->GetItemForPath("AAAABBB", DocumentMetadataItemFlags::All), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("AAAABBBB/QQQ", DocumentMetadataItemFlags::kAll), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("AAAABBBB//QQQ", DocumentMetadataItemFlags::kAll), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->GetItemForPath("AAAABBB", DocumentMetadataItemFlags::kAll), invalid_path_exception);
 }
 
 TEST(Metadata, CallEnumerateItemsForPathForNonExistingItemAndExpectError)
@@ -860,5 +860,5 @@ TEST(Metadata, CallEnumerateItemsForPathForNonExistingItemAndExpectError)
         IDocumentMetadataWrite::metadata_item_variant("Testtext"));
 
     // Act & Assert
-    EXPECT_THROW(metadata_reader->EnumerateItemsForPath("Testtext2", true, DocumentMetadataItemFlags::All, [](auto x, auto y) {return true; }), invalid_path_exception);
+    EXPECT_THROW(metadata_reader->EnumerateItemsForPath("Testtext2", true, DocumentMetadataItemFlags::kAll, [](auto x, auto y) {return true; }), invalid_path_exception);
 }

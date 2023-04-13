@@ -176,17 +176,17 @@ imgdoc2::DocumentMetadataItem DocumentMetadataReader::RetrieveDocumentMetadataIt
 {
     DocumentMetadataItem item;
     item.flags = flags;
-    if ((flags & DocumentMetadataItemFlags::PrimaryKeyValid) == DocumentMetadataItemFlags::PrimaryKeyValid)
+    if ((flags & DocumentMetadataItemFlags::kPrimaryKeyValid) == DocumentMetadataItemFlags::kPrimaryKeyValid)
     {
         item.primary_key = statement->GetResultInt64(0);
     }
 
-    if ((flags & DocumentMetadataItemFlags::NameValid) == DocumentMetadataItemFlags::NameValid)
+    if ((flags & DocumentMetadataItemFlags::kNameValid) == DocumentMetadataItemFlags::kNameValid)
     {
         item.name = statement->GetResultString(1);
     }
 
-    if ((flags & DocumentMetadataItemFlags::DocumentMetadataTypeAndValueValid) == DocumentMetadataItemFlags::DocumentMetadataTypeAndValueValid)
+    if ((flags & DocumentMetadataItemFlags::kDocumentMetadataTypeAndValueValid) == DocumentMetadataItemFlags::kDocumentMetadataTypeAndValueValid)
     {
         const auto database_item_type_value = statement->GetResultInt32(2);
         switch (static_cast<DatabaseDataTypeValue>(database_item_type_value))

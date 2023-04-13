@@ -60,11 +60,11 @@ namespace imgdoc2
     enum class DocumentMetadataItemFlags : std::uint8_t
     {
         None = 0,
-        PrimaryKeyValid = 1,
-        NameValid = 2,
-        DocumentMetadataTypeAndValueValid = 4,
+        kPrimaryKeyValid = 1,
+        kNameValid = 2,
+        kDocumentMetadataTypeAndValueValid = 4,
 
-        All = PrimaryKeyValid | NameValid | DocumentMetadataTypeAndValueValid
+        kAll = kPrimaryKeyValid | kNameValid | kDocumentMetadataTypeAndValueValid
     };
 
     // -> https://stackoverflow.com/a/34220050/522591
@@ -97,7 +97,7 @@ namespace imgdoc2
     class IDocumentMetadataRead : public IDocumentMetadata
     {
     public:
-        virtual ~IDocumentMetadataRead() = default;
+        ~IDocumentMetadataRead() override = default;
 
         /// Get the item identified by the specified key. The argument 'flags' specifies which pieces of information should be retrieved.
         /// Only the information specified in the flags can be expected to be valid in the returned DocumentMetadataItem.
@@ -161,7 +161,7 @@ namespace imgdoc2
     class IDocumentMetadataWrite : public IDocumentMetadata
     {
     public:
-        virtual ~IDocumentMetadataWrite() = default;
+        ~IDocumentMetadataWrite() override = default;
 
         /// This method updates or creates a node with the name as specified in the parameter 'name'
         /// as a child of the node specified by 'parent'. If 'create_node_if_not_exists' is true, the
