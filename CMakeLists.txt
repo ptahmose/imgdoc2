@@ -35,7 +35,7 @@ option(IMGDOC2_CODECOV_GCOVRHTML "Build with Code-Coverage (for unit-tests) as a
 
 option(IMGDOC2_BUILD_CONVCZI "Whether to build the convczi-tool" ON)
 
-option(IMGDOC2_BUILD_NATIVEIMGDOC2CMD "Whether to build the native imgdoc2cmd-tool (currently contains throw-away experiments)" ON))
+option(IMGDOC2_BUILD_NATIVEIMGDOC2CMD "Whether to build the native imgdoc2cmd-tool (currently contains throw-away experiments)" ON)
 
 
 if (IMGDOC2_BUILD_CLANGTIDY)
