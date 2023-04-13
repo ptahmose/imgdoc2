@@ -20,9 +20,13 @@ using namespace imgdoc2;
         throw non_existing_item_exception(ss.str(), primary_key);
     }
 
-    this->GetPathForNode(primary_key);
-
     DocumentMetadataItem item = this->RetrieveDocumentMetadataItemFromStatement(statement, flags);
+    if ((flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath)
+    {
+        item.complete_path = this->GetPathForNode(primary_key);
+        item.flags = item.flags | DocumentMetadataItemFlags::kCompletePath;
+    }
+
     return item;
 }
 
@@ -258,55 +262,22 @@ std::string DocumentMetadataReader::GetPathForNode(imgdoc2::dbIndex node_id)
     const auto column_name_pk = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Pk);
     const auto column_name_name = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_Name);
     const auto column_name_ancestor_id = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_AncestorId);
-    const auto column_name_type_discriminator = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_TypeDiscriminator);
-    const auto column_name_value_double = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueDouble);
-    const auto column_name_value_integer = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueInteger);
-    const auto column_name_value_string = this->GetDocument()->GetDataBaseConfigurationCommon()->GetColumnNameOfMetadataTableOrThrow(DatabaseConfigurationCommon::kMetadataTable_Column_ValueString);
 
-    string_stream << "WITH RECURSIVE item_path (" << column_name_pk << ", " << column_name_name << ", " << column_name_ancestor_id << ", path) AS( " <<
-        "SELECT " << column_name_pk << ", " << column_name_name << ", " << column_name_ancestor_id << ", " << column_name_name << " AS path " <<
+    string_stream << "WITH RECURSIVE item_path (" << column_name_pk << "," << column_name_name << "," << column_name_ancestor_id << ",path) AS( " <<
+        "SELECT " << column_name_pk << "," << column_name_name << "," << column_name_ancestor_id << "," << column_name_name << " AS path " <<
         "FROM " << metadata_table_name << " WHERE " << column_name_ancestor_id << " IS NULL " <<
         "UNION ALL " <<
-        "SELECT i." << column_name_pk << ", i." << column_name_name << ", i." << column_name_ancestor_id << ", ip.path || '" << DocumentMetadataBase::kPathDelimiter_ << "' || i." << column_name_name << " AS path " <<
+        "SELECT i." << column_name_pk << ",i." << column_name_name << ",i." << column_name_ancestor_id << ",ip.path || '" << DocumentMetadataBase::kPathDelimiter_ << "' || i." << column_name_name << " AS path " <<
         "FROM " << metadata_table_name << " i " <<
         "JOIN item_path ip ON i." << column_name_ancestor_id << " = ip." << column_name_pk << ") " <<
-        "SELECT path FROM item_path WHERE " << column_name_pk << " = ?1;";
+        "SELECT path FROM item_path WHERE " << column_name_pk << "=?1;";
 
-
-    /*
-            R"_(WITH RECURSIVE item_path(Pk, Name, AncestorId, path) AS(
-      -- Base case: select items with no parent (top-level items)
-      SELECT
-        Pk,
-        Name,
-        AncestorId,
-        Name AS path
-      FROM METADATA
-      WHERE AncestorId IS NULL
-
-      UNION ALL
-
-      -- Recursive case: join items with their parent items in the item_path
-      SELECT
-        i.Pk,
-        i.Name,
-        i.AncestorId,
-        ip.path || '/' || i.Name AS path
-      FROM METADATA i
-      JOIN item_path ip ON i.AncestorId = ip.Pk
-    )
-
-    -- Choose the item for which you want to find the path
-    SELECT path
-    FROM item_path
-    WHERE Pk = ?1;)_";*/
-
-    auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
+    const auto statement = this->GetDocument()->GetDatabase_connection()->PrepareStatement(string_stream.str());
     statement->BindInt64(1, node_id);
 
     if (!this->GetDocument()->GetDatabase_connection()->StepStatement(statement.get()))
     {
-        throw internal_error_exception("DocumentMetadataReader::CheckIfItemExists: Could not execute statement.");
+        throw internal_error_exception("DocumentMetadataReader::GetPathForNode: Could not execute statement.");
     }
 
     auto result = statement->GetResultString(0);

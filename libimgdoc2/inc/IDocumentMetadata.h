@@ -95,6 +95,7 @@ namespace imgdoc2
         DocumentMetadataItemFlags flags{ DocumentMetadataItemFlags::None };
         imgdoc2::dbIndex primary_key{ 0 };
         std::string name;
+        std::string complete_path;
         DocumentMetadataType type{ DocumentMetadataType::kInvalid };
         IDocumentMetadata::metadata_item_variant value;
     };

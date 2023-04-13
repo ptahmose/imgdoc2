@@ -862,3 +862,26 @@ TEST(Metadata, CallEnumerateItemsForPathForNonExistingItemAndExpectError)
     // Act & Assert
     EXPECT_THROW(metadata_reader->EnumerateItemsForPath("Testtext2", true, DocumentMetadataItemFlags::kAll, [](auto x, auto y) {return true; }), invalid_path_exception);
 }
+
+TEST(Metadata, GetItemWithFullPathCheckResult_Scenario1)
+{
+    // Arrange
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_reader = doc->GetDocumentMetadataReader();
+    const auto metadata_writer = doc->GetDocumentMetadataWriter();
+
+    const auto pk = metadata_writer->UpdateOrCreateItemForPath(
+        true,
+        true,
+        "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z",
+        DocumentMetadataType::kText,
+        IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+
+    auto item = metadata_reader->GetItem(pk, DocumentMetadataItemFlags::kAllWithCompletePath);
+
+    EXPECT_TRUE((item.flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath);
+    EXPECT_STREQ(item.complete_path.c_str(), "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z");
+}
