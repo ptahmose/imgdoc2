@@ -47,6 +47,8 @@ namespace imgdoc2
     public:
         typedef std::variant<std::string, std::int32_t, double, std::monostate> metadata_item_variant;
 
+        virtual ~IDocumentMetadata() = default;
+
         // no copy and no move (-> https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#c21-if-you-define-or-delete-any-copy-move-or-destructor-function-define-or-delete-them-all )
         IDocumentMetadata() = default;
         IDocumentMetadata(const IDocumentMetadata&) = delete;             // copy constructor
