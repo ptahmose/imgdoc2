@@ -45,6 +45,7 @@ namespace imgdoc2
     class IDocumentMetadata
     {
     public:
+        /// Defines an alias representing the metadata item variant. This variant can contain a string, an int32, a double or a std::monostate.
         typedef std::variant<std::string, std::int32_t, double, std::monostate> metadata_item_variant;
 
         virtual ~IDocumentMetadata() = default;
@@ -67,24 +68,27 @@ namespace imgdoc2
         kAll = kPrimaryKeyValid | kNameValid | kDocumentMetadataTypeAndValueValid
     };
 
-    // -> https://stackoverflow.com/a/34220050/522591
+    /// Bitwise 'or' operator for DocumentMetadataItemFlags. This is needed to be able to use the flags in a bitwise fashion.
+    /// C.f. https://stackoverflow.com/a/34220050/522591.
+    /// \param  x   A bit-field to process.
+    /// \param  y   One or more bits to OR into the bit-field.
+    /// \returns    The result of the operation.
     inline constexpr DocumentMetadataItemFlags operator|(DocumentMetadataItemFlags x, DocumentMetadataItemFlags y)
     {
         return static_cast<DocumentMetadataItemFlags>(static_cast<std::underlying_type_t<DocumentMetadataItemFlags>>(x) | static_cast<std::underlying_type_t<DocumentMetadataItemFlags>>(y));
     }
 
+    /// Bitwise 'and' operator for DocumentMetadataItemFlags. This is needed to be able to use the flags in a bitwise fashion.
+    /// C.f. https://stackoverflow.com/a/34220050/522591.
+    /// \param  x   A bit-field to process.
+    /// \param  y   A mask of bits to apply to the bit-field.
+    /// \returns    The result of the operation.
     inline constexpr DocumentMetadataItemFlags operator&(DocumentMetadataItemFlags x, DocumentMetadataItemFlags y)
     {
         return static_cast<DocumentMetadataItemFlags>(static_cast<std::underlying_type_t<DocumentMetadataItemFlags>>(x) & static_cast<std::underlying_type_t<DocumentMetadataItemFlags>>(y));
     }
 
-    inline DocumentMetadataItemFlags& operator|=(DocumentMetadataItemFlags& x, DocumentMetadataItemFlags y)
-    {
-        x = x | y;
-        return x;
-    }
-
-    struct DocumentMetadataItem
+      struct DocumentMetadataItem
     {
         DocumentMetadataItemFlags flags{ DocumentMetadataItemFlags::None };
         imgdoc2::dbIndex primary_key{ 0 };
@@ -187,6 +191,7 @@ namespace imgdoc2
         /// also deleted. If 'recursively' is false, the node is only deleted if it has no child nodes.
         /// The method returns the number of deleted nodes - it does not throw an exception if the
         /// primary key does not exist or if the node has child nodes and 'recursively' is false.
+        /// Note that the root node cannot be deleted - however, it is possible to delete all child nodes of the root node.
         /// 
         /// \param  primary_key Key of the node to be deleted. If this the optional has no value, this means "the root".
         /// \param  recursively True if all child nodes should be deleted, false if only the node itself should be deleted.
@@ -195,9 +200,21 @@ namespace imgdoc2
         virtual std::uint64_t DeleteItem(
                     std::optional<imgdoc2::dbIndex> primary_key,
                     bool recursively) = 0;
+
+        /// Deletes the item specified by 'path'. If 'recursively' is true, all child nodes are
+        /// also deleted. If 'recursively' is false, the node is only deleted if it has no child nodes.
+        /// The method returns the number of deleted nodes - it does not throw an exception if the
+        /// primary key does not exist or if the node has child nodes and 'recursively' is false.
+        /// Note that the root node cannot be deleted - however, it is possible to delete all child nodes of the root node.
+        /// 
+        /// \param  path        The path of the node to be deleted. If this is an empty string, it identifies the "root".
+        /// \param  recursively True if all child nodes should be deleted, false if only the node itself should be deleted.
+        ///
+        /// \returns    The number of deleted nodes as a result by this call.
         virtual std::uint64_t DeleteItemForPath(
                    const std::string& path,
                    bool recursively) = 0;
+
         virtual imgdoc2::dbIndex UpdateOrCreateItemForPath(
                     bool create_path_if_not_exists,
                     bool create_node_if_not_exists,
