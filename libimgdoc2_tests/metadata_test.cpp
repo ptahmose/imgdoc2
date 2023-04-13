@@ -130,7 +130,7 @@ TEST(Metadata, AddMetadataItemsAndCheckIfTheyAreAdded_Scenario2)
         "C",
         DocumentMetadataType::kDefault,
         IDocumentMetadataWrite::metadata_item_variant(1234));
-    auto pk_node1_1_1_1 = metadata_writer->UpdateOrCreateItem(
+    metadata_writer->UpdateOrCreateItem(
         pk_node1_1_1,
         true,
         "D",
@@ -542,7 +542,7 @@ TEST(Metadata, EnumerateItemsForPath_Scenario3)
     //              / \
     //             E   F
 
-    const auto id_item_b = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::kNull, std::monostate());
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::kNull, std::monostate());
     const auto id1 = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext"));
     const auto id2 = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/D", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
     metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
@@ -609,8 +609,8 @@ TEST(Metadata, DeleteItem_Scenario1)
     const auto id_b = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::kNull, std::monostate());
     const auto id_c = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext"));
     const auto id_d = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/D", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
-    const auto id_e = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
-    const auto id_f = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
 
     // Act & Assert
 
@@ -654,11 +654,11 @@ TEST(Metadata, DeleteItemDeleteRoot)
     //              / \
     //             E   F
 
-    const auto id_b = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::kNull, std::monostate());
-    const auto id_c = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext"));
-    const auto id_d = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/D", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
-    const auto id_e = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
-    const auto id_f = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::kNull, std::monostate());
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/D", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
 
     // Act & Assert
 
@@ -691,11 +691,11 @@ TEST(Metadata, DeleteItemForPath_Scenario1)
     //              / \
     //             E   F
 
-    const auto id_b = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::kNull, std::monostate());
-    const auto id_c = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext"));
-    const auto id_d = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/D", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
-    const auto id_e = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
-    const auto id_f = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::kNull, std::monostate());
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/D", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
 
     // Act & Assert
 
@@ -739,11 +739,11 @@ TEST(Metadata, DeleteItemForPathDeleteRoot)
     //              / \
     //             E   F
 
-    const auto id_b = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::kNull, std::monostate());
-    const auto id_c = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext"));
-    const auto id_d = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/D", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
-    const auto id_e = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
-    const auto id_f = metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B", DocumentMetadataType::kNull, std::monostate());
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/D", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext2"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/E", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext3"));
+    metadata_writer->UpdateOrCreateItemForPath(true, true, "A/B/C/F", DocumentMetadataType::kText, IDocumentMetadataWrite::metadata_item_variant("Testtext4"));
 
     // Act & Assert
 
@@ -1138,11 +1138,10 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
     const auto id_item_a = metadata_writer->UpdateOrCreateItem(nullopt, true, "A", DocumentMetadataType::kNull, std::monostate());
     const auto id_item_b = metadata_writer->UpdateOrCreateItem(id_item_a, true, "B", DocumentMetadataType::kNull, std::monostate());
     const auto id_item_c = metadata_writer->UpdateOrCreateItem(id_item_b, true, "C", DocumentMetadataType::kNull, std::monostate());
-    const auto id_item_d = metadata_writer->UpdateOrCreateItem(id_item_b, true, "D", DocumentMetadataType::kNull, std::monostate());
-    const auto id_item_e = metadata_writer->UpdateOrCreateItem(id_item_c, true, "E", DocumentMetadataType::kNull, std::monostate());
-    const auto id_item_f = metadata_writer->UpdateOrCreateItem(id_item_c, true, "F", DocumentMetadataType::kNull, std::monostate());
+    metadata_writer->UpdateOrCreateItem(id_item_b, true, "D", DocumentMetadataType::kNull, std::monostate());
+    metadata_writer->UpdateOrCreateItem(id_item_c, true, "E", DocumentMetadataType::kNull, std::monostate());
+    metadata_writer->UpdateOrCreateItem(id_item_c, true, "F", DocumentMetadataType::kNull, std::monostate());
 
-    
     // Act
     vector<DocumentMetadataItem> results;
 
@@ -1200,7 +1199,7 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
             return false;
         });
     EXPECT_TRUE(all_true);
-    
+
     // Act
 
     // query for direct and indirect children of C
