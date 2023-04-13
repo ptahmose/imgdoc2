@@ -123,7 +123,7 @@ int DocumentMetadataBase::BindTypeDiscriminatorAndData(
 /*static*/std::vector<std::string_view> DocumentMetadataBase::SplitPath(const std::string_view& path)
 {
     std::vector<std::string_view> tokens;
-    std::size_t start = 0, end = 0;
+    std::size_t start = 0, end;
     while ((end = path.find(DocumentMetadataBase::kPathDelimiter_, start)) != std::string_view::npos)
     {
         if (end == start)
