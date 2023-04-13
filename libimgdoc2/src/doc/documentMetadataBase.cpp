@@ -30,6 +30,9 @@ DocumentMetadataBase::DatabaseDataTypeValue DocumentMetadataBase::DetermineDatab
 
     switch (type)
     {
+        case DocumentMetadataType::kNull:
+            // in this the value does not matter
+            return DatabaseDataTypeValue::null;
         case DocumentMetadataType::kText:
             // in this case the value must contain a string
             if (!std::holds_alternative<std::string>(value))
@@ -79,6 +82,8 @@ DocumentMetadataBase::DatabaseDataTypeValue DocumentMetadataBase::DetermineDatab
             {
                 throw invalid_argument_exception("Unknown metadata item type");
             }
+        case DocumentMetadataType::kInvalid:
+            throw invalid_argument_exception("The metadata type is invalid");
     }
 
     return DatabaseDataTypeValue::invalid;
