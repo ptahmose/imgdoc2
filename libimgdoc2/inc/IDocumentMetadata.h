@@ -18,7 +18,7 @@ namespace imgdoc2
     enum class DocumentMetadataType : std::uint8_t
     {
         /// An enum constant representing the invalid option. This value is not legal for any call into the document metadata API.
-        kInvalid = 0,        
+        kInvalid = 0,
 
         /// An enum constant representing the default option.Default means that the type is determined from the value variant.
         /// The mapping is as follows: If the value variant is std::monostate, the type is set to Invalid. If the value variant is a string, the type is set to Text. 
@@ -90,7 +90,15 @@ namespace imgdoc2
         return static_cast<DocumentMetadataItemFlags>(static_cast<std::underlying_type_t<DocumentMetadataItemFlags>>(x) & static_cast<std::underlying_type_t<DocumentMetadataItemFlags>>(y));
     }
 
-      struct DocumentMetadataItem
+    /// Bitwise 'ones complement' operator for DocumentMetadataItemFlags. This is needed to be able to use the flags in a bitwise fashion.
+    /// \param  x   The DocumentMetadataItemFlags to process.
+    /// \returns    The result of the operation.
+    inline constexpr DocumentMetadataItemFlags operator~(DocumentMetadataItemFlags x)
+    {
+        return static_cast<DocumentMetadataItemFlags>(~static_cast<std::underlying_type_t<DocumentMetadataItemFlags>>(x));
+    }
+
+    struct DocumentMetadataItem
     {
         DocumentMetadataItemFlags flags{ DocumentMetadataItemFlags::None };
         imgdoc2::dbIndex primary_key{ 0 };

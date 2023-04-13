@@ -39,7 +39,9 @@ using namespace imgdoc2;
             throw non_existing_item_exception(ss.str(), primary_key);
         }
 
-        item = this->RetrieveDocumentMetadataItemFromStatement(statement, flags);
+        // Note that "CreateStatementForRetrievingItem" does not retrieve the "complete path" of the item, we need to do this separately
+        //  for the time being, so we need to remove the "kCompletePath" flag from the flags parameter
+        item = this->RetrieveDocumentMetadataItemFromStatement(statement, flags & ~DocumentMetadataItemFlags::kCompletePath, "");
     }
 
     // check if we have to "retrieve the complete path" (i.e. if the caller wants to have the complete path of the item)
@@ -79,6 +81,50 @@ void DocumentMetadataReader::EnumerateItems(
   DocumentMetadataItemFlags flags,
   const std::function<bool(imgdoc2::dbIndex, const DocumentMetadataItem& item)>& func)
 {
+    string path_of_parent_node;
+
+    // if we are to retrieve to first retrieve the path to the 'parent'-node
+    if (parent.has_value() && (flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath)
+    {
+        if (!this->GetPathForNode(parent.value(), path_of_parent_node))
+        {
+            ostringstream ss;
+            ss << "Request for reading the path of a non-existing item (with pk=" << parent.value() << ")";
+            throw non_existing_item_exception(ss.str(), parent.value());
+        }
+
+        path_of_parent_node += DocumentMetadataBase::kPathDelimiter_;
+    }
+
+    this->InternalEnumerateItems(parent, path_of_parent_node, recursive, flags, func);
+}
+
+void DocumentMetadataReader::EnumerateItemsForPath(
+  const std::string& path,
+  bool recursive,
+  DocumentMetadataItemFlags flags,
+  const std::function<bool(imgdoc2::dbIndex, const DocumentMetadataItem& item)>& func)
+{
+    optional<imgdoc2::dbIndex> idx;
+    const bool success = this->TryMapPathAndGetTerminalNode(path, &idx);
+    if (success)
+    {
+        this->InternalEnumerateItems(idx, path, recursive, flags, func);
+        return;
+    }
+
+    ostringstream string_stream;
+    string_stream << "The path '" << path << "' does not exist.";
+    throw invalid_path_exception(string_stream.str());
+}
+
+void DocumentMetadataReader::InternalEnumerateItems(
+        std::optional<imgdoc2::dbIndex> parent,
+        const std::string& path_of_parent,
+        bool recursive,
+        imgdoc2::DocumentMetadataItemFlags flags,
+        const std::function<bool(imgdoc2::dbIndex, const imgdoc2::DocumentMetadataItem& item)>& func)
+{
     const auto statement = this->CreateStatementForEnumerateAllItemsWithAncestorAndDataBind(
         recursive,
         (flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath,
@@ -89,7 +135,7 @@ void DocumentMetadataReader::EnumerateItems(
     {
         at_least_one_item_found = true;
         const imgdoc2::dbIndex index = statement->GetResultInt64(0);
-        DocumentMetadataItem document_metadata_item = this->RetrieveDocumentMetadataItemFromStatement(statement, flags);
+        DocumentMetadataItem document_metadata_item = this->RetrieveDocumentMetadataItemFromStatement(statement, flags, path_of_parent);
         const bool continue_operation = func(index, document_metadata_item);
         if (!continue_operation)
         {
@@ -110,25 +156,6 @@ void DocumentMetadataReader::EnumerateItems(
             throw non_existing_item_exception(string_stream.str(), parent.value());
         }
     }
-}
-
-void DocumentMetadataReader::EnumerateItemsForPath(
-  const std::string& path,
-  bool recursive,
-  DocumentMetadataItemFlags flags,
-  const std::function<bool(imgdoc2::dbIndex, const DocumentMetadataItem& item)>& func)
-{
-    optional<imgdoc2::dbIndex> idx;
-    const bool success = this->TryMapPathAndGetTerminalNode(path, &idx);
-    if (success)
-    {
-        this->EnumerateItems(idx, recursive, flags, func);
-        return;
-    }
-
-    ostringstream string_stream;
-    string_stream << "The path '" << path << "' does not exist.";
-    throw invalid_path_exception(string_stream.str());
 }
 
 std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForRetrievingItem(imgdoc2::DocumentMetadataItemFlags flags)
@@ -221,7 +248,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerat
            [ValueInteger],
            [ValueString],
     FROM   [cte];
-   
+
      */
     const bool parent_has_value = parent.has_value();
     ostringstream string_stream;
@@ -289,9 +316,9 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerat
         if (include_path)
         {
             string_stream << "WITH RECURSIVE [cte](" <<
-                  column_name_pk << "," << column_name_name << "," << column_name_ancestor_id << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << ",Path) AS(" <<
-                  "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_ancestor_id << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << "],[" << column_name_value_string << "],[" << column_name_name << "] As Path " <<
-                  "FROM [" << metadata_table_name << "] ";
+                column_name_pk << "," << column_name_name << "," << column_name_ancestor_id << "," << column_name_type_discriminator << "," << column_name_value_double << "," << column_name_value_integer << "," << column_name_value_string << ",Path) AS(" <<
+                "SELECT [" << column_name_pk << "],[" << column_name_name << "],[" << column_name_ancestor_id << "],[" << column_name_type_discriminator << "],[" << column_name_value_double << "],[" << column_name_value_integer << "],[" << column_name_value_string << "],[" << column_name_name << "] As Path " <<
+                "FROM [" << metadata_table_name << "] ";
             if (parent_has_value)
             {
                 string_stream << "WHERE " << column_name_ancestor_id << "=?1 ";
@@ -341,7 +368,7 @@ std::shared_ptr<IDbStatement> DocumentMetadataReader::CreateStatementForEnumerat
     return statement;
 }
 
-imgdoc2::DocumentMetadataItem DocumentMetadataReader::RetrieveDocumentMetadataItemFromStatement(const std::shared_ptr<IDbStatement>& statement, imgdoc2::DocumentMetadataItemFlags flags)
+imgdoc2::DocumentMetadataItem DocumentMetadataReader::RetrieveDocumentMetadataItemFromStatement(const std::shared_ptr<IDbStatement>& statement, imgdoc2::DocumentMetadataItemFlags flags, const string& path_to_prepend)
 {
     DocumentMetadataItem item;
     item.flags = flags;
@@ -387,7 +414,7 @@ imgdoc2::DocumentMetadataItem DocumentMetadataReader::RetrieveDocumentMetadataIt
 
     if ((flags & DocumentMetadataItemFlags::kCompletePath) == DocumentMetadataItemFlags::kCompletePath)
     {
-        item.complete_path = statement->GetResultString(6);
+        item.complete_path = path_to_prepend + statement->GetResultString(6);
     }
 
     return item;

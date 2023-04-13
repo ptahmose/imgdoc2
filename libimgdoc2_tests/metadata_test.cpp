@@ -953,7 +953,7 @@ TEST(Metadata, GetItemForNonExistingItemTestAllFlags)
     EXPECT_THROW(metadata_reader->GetItem(invalid_key, DocumentMetadataItemFlags::kPrimaryKeyValid | DocumentMetadataItemFlags::kNameValid | DocumentMetadataItemFlags::kDocumentMetadataTypeAndValueValid), non_existing_item_exception);
 }
 
-TEST(Metadata, EnumerateItemsFullPathCheckResult)
+TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario1)
 {
     // Arrange
     const auto create_options = ClassFactory::CreateCreateOptionsUp();
@@ -1108,6 +1108,281 @@ TEST(Metadata, EnumerateItemsFullPathCheckResult)
             else if (i.name == "Z")
             {
                 return i.complete_path == "A/B/C/D/E/F/G/H/I/J/K/L/M/N/O/P/Q/R/S/T/U/V/W/X/Y/Z";
+            }
+
+            return false;
+        });
+    EXPECT_TRUE(all_true);
+}
+
+TEST(Metadata, EnumerateItemsFullPathCheckResult_Scenario2)
+{
+    // Arrange
+    const auto create_options = ClassFactory::CreateCreateOptionsUp();
+    create_options->SetFilename(":memory:");
+    create_options->AddDimension('M');
+    const auto doc = ClassFactory::CreateNew(create_options.get());
+    const auto metadata_writer = doc->GetDocumentMetadataWriter();
+    const auto metadata_reader = doc->GetDocumentMetadataReader();
+
+    // we construct the following tree:
+    // 
+    //                 A
+    //                 |
+    //                 B
+    //                / \
+    //               C   D
+    //              / \
+    //             E   F
+
+    const auto id_item_a = metadata_writer->UpdateOrCreateItem(nullopt, true, "A", DocumentMetadataType::kNull, std::monostate());
+    const auto id_item_b = metadata_writer->UpdateOrCreateItem(id_item_a, true, "B", DocumentMetadataType::kNull, std::monostate());
+    const auto id_item_c = metadata_writer->UpdateOrCreateItem(id_item_b, true, "C", DocumentMetadataType::kNull, std::monostate());
+    const auto id_item_d = metadata_writer->UpdateOrCreateItem(id_item_b, true, "D", DocumentMetadataType::kNull, std::monostate());
+    const auto id_item_e = metadata_writer->UpdateOrCreateItem(id_item_c, true, "E", DocumentMetadataType::kNull, std::monostate());
+    const auto id_item_f = metadata_writer->UpdateOrCreateItem(id_item_c, true, "F", DocumentMetadataType::kNull, std::monostate());
+
+    
+    // Act
+    vector<DocumentMetadataItem> results;
+
+    // query for all items with complete path
+    metadata_reader->EnumerateItems(
+        nullopt,
+        true,
+        DocumentMetadataItemFlags::kAllWithCompletePath,
+        [&results](const auto pk, const auto item)
+        {
+            results.push_back(item);
+            return true;
+        });
+
+    // Assert
+    EXPECT_EQ(results.size(), 6);
+    bool all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            return (i.flags & (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid)) == (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid);
+        });
+    EXPECT_TRUE(all_true);
+    all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            if (i.name == "A")
+            {
+                return i.complete_path == "A";
+            }
+            else if (i.name == "B")
+            {
+                return i.complete_path == "A/B";
+            }
+            else if (i.name == "C")
+            {
+                return i.complete_path == "A/B/C";
+            }
+            else if (i.name == "D")
+            {
+                return i.complete_path == "A/B/D";
+            }
+            else if (i.name == "E")
+            {
+                return i.complete_path == "A/B/C/E";
+            }
+            else if (i.name == "F")
+            {
+                return i.complete_path == "A/B/C/F";
+            }
+
+            return false;
+        });
+    EXPECT_TRUE(all_true);
+    
+    // Act
+
+    // query for direct and indirect children of C
+    results.clear();
+    metadata_reader->EnumerateItems(
+        id_item_c,
+        true,
+        DocumentMetadataItemFlags::kAllWithCompletePath,
+        [&results](const auto pk, const auto item)
+        {
+            results.push_back(item);
+            return true;
+        });
+
+    // Assert
+    EXPECT_EQ(results.size(), 2);
+    all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            return (i.flags & (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid)) == (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid);
+        });
+    EXPECT_TRUE(all_true);
+    all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            if (i.name == "E")
+            {
+                return i.complete_path == "A/B/C/E";
+            }
+            else if (i.name == "F")
+            {
+                return i.complete_path == "A/B/C/F";
+            }
+
+            return false;
+        });
+    EXPECT_TRUE(all_true);
+
+    // Act
+
+    // query for direct children of B
+    results.clear();
+    metadata_reader->EnumerateItems(
+        id_item_b,
+        false,
+        DocumentMetadataItemFlags::kAllWithCompletePath,
+        [&results](const auto pk, const auto item)
+        {
+            results.push_back(item);
+            return true;
+        });
+
+    // Assert
+    EXPECT_EQ(results.size(), 2);
+    all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            return (i.flags & (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid)) == (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid);
+        });
+    EXPECT_TRUE(all_true);
+    all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            if (i.name == "C")
+            {
+                return i.complete_path == "A/B/C";
+            }
+            else if (i.name == "D")
+            {
+                return i.complete_path == "A/B/D";
+            }
+
+            return false;
+        });
+    EXPECT_TRUE(all_true);
+
+    // Act
+
+    // query for direct and indirect children of B
+    results.clear();
+    metadata_reader->EnumerateItems(
+        id_item_b,
+        true,
+        DocumentMetadataItemFlags::kAllWithCompletePath,
+        [&results](const auto pk, const auto item)
+        {
+            results.push_back(item);
+            return true;
+        });
+
+    // Assert
+    EXPECT_EQ(results.size(), 4);
+    all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            return (i.flags & (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid)) == (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid);
+        });
+    EXPECT_TRUE(all_true);
+    all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            if (i.name == "C")
+            {
+                return i.complete_path == "A/B/C";
+            }
+            else if (i.name == "D")
+            {
+                return i.complete_path == "A/B/D";
+            }
+            else if (i.name == "E")
+            {
+                return i.complete_path == "A/B/C/E";
+            }
+            else if (i.name == "F")
+            {
+                return i.complete_path == "A/B/C/F";
+            }
+
+            return false;
+        });
+    EXPECT_TRUE(all_true);
+
+    // Act
+
+    // query for direct and indirect children of A
+    results.clear();
+    metadata_reader->EnumerateItems(
+        id_item_a,
+        true,
+        DocumentMetadataItemFlags::kAllWithCompletePath,
+        [&results](const auto pk, const auto item)
+        {
+            results.push_back(item);
+            return true;
+        });
+
+    // Assert
+    EXPECT_EQ(results.size(), 5);
+    all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            return (i.flags & (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid)) == (DocumentMetadataItemFlags::kCompletePath | DocumentMetadataItemFlags::kNameValid);
+        });
+    EXPECT_TRUE(all_true);
+    all_true = all_of(
+        results.begin(),
+        results.end(),
+        [](DocumentMetadataItem& i)
+        {
+            if (i.name == "B")
+            {
+                return i.complete_path == "A/B";
+            }
+            else if (i.name == "C")
+            {
+                return i.complete_path == "A/B/C";
+            }
+            else if (i.name == "D")
+            {
+                return i.complete_path == "A/B/D";
+            }
+            else if (i.name == "E")
+            {
+                return i.complete_path == "A/B/C/E";
+            }
+            else if (i.name == "F")
+            {
+                return i.complete_path == "A/B/C/F";
             }
 
             return false;
