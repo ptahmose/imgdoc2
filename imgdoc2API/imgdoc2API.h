@@ -67,7 +67,14 @@ typedef bool(LIBIMGDOC2_STDCALL* MemTransferSetDataFunctionPointer)(std::intptr_
 
 typedef bool(LIBIMGDOC2_STDCALL* AllocMemoryFunctionPointer)(std::uint64_t size, AllocationObject* allocation_object);
 
-EXTERNAL_API(void) GetVersionInfo(VersionInfoInterop* version_info, AllocMemoryFunctionPointer allocate_memory_function);
+/// Gets version information. This function is used to retrieve the version information of the library.
+/// Note that the specified allocate_memory_function is used to allocate memory for the strings in the VersionInfoInterop structure.
+/// If the allocate_memory_function is null, then the strings will not be returned.
+///
+/// \param [out]    version_info                Structure where the version information will be placed.
+/// \param          allocate_memory_function    If non-null, the allocate memory function.will be used to allocate memory for the strings in the VersionInfoInterop structure
+///                                             to be returned.
+EXTERNAL_API(ImgDoc2ErrorCode) GetVersionInfo(VersionInfoInterop* version_info, AllocMemoryFunctionPointer allocate_memory_function);
 
 /// Retrieve the 'ImgDoc2StatisticsInterop' structure, which contains various statistics about
 /// the state of library.In particular, we keep track of how many outstanding object-handles we

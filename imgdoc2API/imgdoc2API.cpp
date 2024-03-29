@@ -17,6 +17,8 @@
 #include "sharedptrwrapper.h"
 #include <imgdoc2.h>
 
+#include "gsl/narrow"
+
 using namespace imgdoc2;
 using namespace std;
 
@@ -97,8 +99,10 @@ static void ClearAllocationObject(AllocationObject* allocation_object)
 
 static void CopyStringToAllocationObject(const string& str, AllocMemoryFunctionPointer allocate_memory_function, AllocationObject* allocation_object)
 {
-    size_t size = str.length() + 1;
-    if (allocate_memory_function != nullptr && allocate_memory_function(size, allocation_object))
+    const size_t size = str.length() + 1;
+    if (allocate_memory_function != nullptr &&
+            allocate_memory_function(size, allocation_object) &&
+            allocation_object->pointer_to_memory != nullptr)
     {
         memcpy(allocation_object->pointer_to_memory, str.c_str(), size);
         allocation_object->handle = reinterpret_cast<intptr_t>(allocation_object->pointer_to_memory);
@@ -109,27 +113,31 @@ static void CopyStringToAllocationObject(const string& str, AllocMemoryFunctionP
     }
 }
 
-void GetVersionInfo(VersionInfoInterop* version_info, AllocMemoryFunctionPointer allocate_memory_function)
+ImgDoc2ErrorCode GetVersionInfo(VersionInfoInterop* version_info, AllocMemoryFunctionPointer allocate_memory_function)
 {
+    if (version_info == nullptr)
+    {
+        return ImgDoc2_ErrorCode_InvalidArgument;
+    }
+
     const VersionInfo native_version_info = ClassFactory::GetVersionInfo();
-    version_info->major = native_version_info.major;
-    version_info->minor = native_version_info.minor;
-    version_info->revision = native_version_info.patch;
+    try
+    {
+        version_info->major = gsl::narrow<int32_t>(native_version_info.major);
+        version_info->minor = gsl::narrow<int32_t>(native_version_info.minor);
+        version_info->revision = gsl::narrow<int32_t>(native_version_info.patch);
+    }
+    catch (const gsl::narrowing_error&)
+    {
+        return ImgDoc2_ErrorCode_UnspecifiedError;
+    }
 
     CopyStringToAllocationObject(native_version_info.compiler_identification, allocate_memory_function, &version_info->compiler_identification);
     CopyStringToAllocationObject(native_version_info.build_type, allocate_memory_function, &version_info->build_type);
     CopyStringToAllocationObject(native_version_info.repository_url, allocate_memory_function, &version_info->repository_url);
     CopyStringToAllocationObject(native_version_info.repository_branch, allocate_memory_function, &version_info->repository_branch);
     CopyStringToAllocationObject(native_version_info.repository_tag, allocate_memory_function, &version_info->repository_tag);
-/*    size_t size = native_version_info.compiler_identification.length() + 1;
-    if (allocate_memory_function != nullptr && allocate_memory_function(size,&version_info->compiler_identification))
-    {
-        memcpy(version_info->compiler_identification.pointer_to_memory, native_version_info.compiler_identification.data(), size);
-    }
-    else
-    {
-        ClearAllocationObject(&version_info->compiler_identification);
-    }*/
+    return ImgDoc2_ErrorCode_OK;
 }
 
 HandleEnvironmentObject CreateEnvironmentObject(
@@ -984,7 +992,7 @@ ImgDoc2ErrorCode IDocRead3d_Query(
     }
 
     const auto reader3d = reader3d_object->shared_ptr_;
-    
+
     const auto dimension_coordinate_query_clause = dim_coordinate_query_clause_interop != nullptr ?
         Utilities::ConvertDimensionQueryRangeClauseInteropToImgdoc2(dim_coordinate_query_clause_interop) :
         CDimCoordinateQueryClause();
@@ -1209,7 +1217,7 @@ ImgDoc2ErrorCode IDocRead2d_ReadTileData(
     }
 
     const auto reader2d = reader2d_object->shared_ptr_;
-    
+
     Utilities::BlobOutputOnFunctionsDecorator blob_output_object(blob_output_handle, pfnReserve, pfnSetData);
     try
     {
@@ -1242,7 +1250,7 @@ ImgDoc2ErrorCode IDocRead3d_ReadBrickData(
     }
 
     const auto reader3d = reader3d_object->shared_ptr_;
-    
+
     Utilities::BlobOutputOnFunctionsDecorator blob_output_object(blob_output_handle, pfnReserve, pfnSetData);
     try
     {

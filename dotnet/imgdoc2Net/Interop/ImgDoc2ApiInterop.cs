@@ -197,11 +197,8 @@ namespace ImgDoc2Net.Interop
                     Marshal.GetFunctionPointerForDelegate<BlobOutputSetSizeDelegate>(ImgDoc2ApiInterop.BlobOutputSetSizeDelegateObj);
                 this.funcPtrBlobOutputSetDataForwarder =
                     Marshal.GetFunctionPointerForDelegate<BlobOutputSetDataDelegate>(ImgDoc2ApiInterop.BlobOutputSetDataDelegateObj);
-                unsafe
-                {
-                    this.funcPtrAllocateMemoryByteArray =
-                        Marshal.GetFunctionPointerForDelegate<AllocateMemoryDelegate>(ImgDoc2ApiInterop.AllocateMemoryFunctionByteArray);
-                }
+                this.funcPtrAllocateMemoryByteArray =
+                    Marshal.GetFunctionPointerForDelegate<AllocateMemoryDelegate>(ImgDoc2ApiInterop.AllocateMemoryFunctionByteArray);
 
                 this.InitializeEnvironmentObject();
             }
@@ -307,7 +304,11 @@ namespace ImgDoc2Net.Interop
 
                 try
                 {
-                    this.getVersionInfo(&versionInfoInterop, this.funcPtrAllocateMemoryByteArray);
+                    int returnCode = this.getVersionInfo(&versionInfoInterop, this.funcPtrAllocateMemoryByteArray);
+                    if (returnCode != ImgDoc2_ErrorCode_OK)
+                    {
+                        throw new InvalidOperationException($"Error in getVersionInfo: {returnCode}");
+                    }
 
                     return new ImgDoc2NativeLibraryVersionInfo()
                     {
@@ -1694,14 +1695,21 @@ namespace ImgDoc2Net.Interop
         /// </summary>
         private readonly IntPtr funcPtrBlobOutputSetDataForwarder;
 
+        /// <summary>
         /// Function pointer (callable from unmanaged code) to the function "AllocateMemoryFunctionByteArray".
+        /// This function is used for allocating memory as a byte-array.
+        ///  </summary>
         private readonly IntPtr funcPtrAllocateMemoryByteArray;
 
         private delegate bool BlobOutputSetSizeDelegate(IntPtr blobOutputObjectHandle, ulong size);
 
         private delegate bool BlobOutputSetDataDelegate(IntPtr blobOutputObjectHandle, ulong offset, ulong size, IntPtr pointerToData);
 
-        private unsafe delegate bool AllocateMemoryDelegate(ulong size, AllocationObjectInterop* allocationObject);
+        /// <summary>
+        /// Definition of a delegate for the "AllocateMemoryFunction" function. The argument 'allocationObject' is a pointer 
+        /// to the structure "AllocationObjectInterop".
+        /// </summary>
+        private delegate bool AllocateMemoryDelegate(ulong size, IntPtr allocationObject);
 
         /// <summary>   
         /// This interface is used for "returning data from the unmanaged code". The idea is that the
@@ -1741,13 +1749,19 @@ namespace ImgDoc2Net.Interop
             return blobOutput.SetData(offset, size, pointerToData);
         }
 
-        private static unsafe bool AllocateMemoryFunctionByteArray(ulong size, AllocationObjectInterop* allocationObject)
+        private static unsafe bool AllocateMemoryFunctionByteArray(ulong size, IntPtr allocationObject)
         {
-            //return Marshal.AllocHGlobal((int)size);
+            if (size > int.MaxValue)
+            {
+                // the sanity check failed - we cannot allocate memory with a size exceeding 'int.MaxValue'
+                return false;
+            }
+
+            AllocationObjectInterop* allocationObjectPointer = (AllocationObjectInterop*)allocationObject.ToPointer();
             byte[] buffer = new byte[size];
             GCHandle gcHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            allocationObject->PointerToMemory = gcHandle.AddrOfPinnedObject();
-            allocationObject->Handle = GCHandle.ToIntPtr(gcHandle);
+            allocationObjectPointer->PointerToMemory = gcHandle.AddrOfPinnedObject();
+            allocationObjectPointer->Handle = GCHandle.ToIntPtr(gcHandle);
             return true;
         }
 
@@ -2201,7 +2215,7 @@ namespace ImgDoc2Net.Interop
             ImgDoc2ErrorInformation* errorInformation);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private unsafe delegate void GetVersionInfoDelegate(
+        private unsafe delegate int GetVersionInfoDelegate(
             VersionInfoInterop* versionInfoInterop,
             IntPtr allocMemoryFunctionPtr);
 
@@ -2707,7 +2721,7 @@ namespace ImgDoc2Net.Interop
                 return string.Empty;
             }
 
-            return Utilities.ConvertFromUtf8IntPtrUnknownLength(allocationObjectInterop.PointerToMemory);
+            return Utilities.ConvertFromUtf8IntPtrZeroTerminated(allocationObjectInterop.PointerToMemory);
         }
 
         private QueryResult InternalReaderQuery(IDocRead2d3d_QueryDelegate nativeQueryFunction, IntPtr handle, IDimensionQueryClause clause, ITileInfoQueryClause tileInfoQueryClause, int maxNumberOfResults)

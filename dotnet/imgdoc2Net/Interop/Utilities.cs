@@ -21,10 +21,29 @@ namespace ImgDoc2Net.Interop
             return (p == 4) || (p == 6) || (p == 128);
         }
 
+        /// <brief> 
+        /// Convert a UTF-8 string (given by a pointer and a length) into a .NET string.
+        /// </brief>
+        /// <exception cref="ArgumentNullException"> Thrown when one or more required arguments are null.</exception>
+        /// <param name="utf8Pointer"> Pointer to the UTF8-encoded string to be converted.</param>
+        /// <param name="length">      The length of the input string in bytes.</param>
+        /// <returns> The converted string.</returns>
         public static string ConvertFromUtf8IntPtr(IntPtr utf8Pointer, int length)
         {
             if (utf8Pointer == IntPtr.Zero)
+            {
                 throw new ArgumentNullException(nameof(utf8Pointer), "Pointer is null.");
+            }
+
+            if (length < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(length), "Length is negative.");
+            }
+
+            if (length == 0)
+            {
+                return string.Empty;
+            }
 
             // Copy data from unmanaged memory to a managed byte array
             byte[] buffer = new byte[length];
@@ -34,8 +53,11 @@ namespace ImgDoc2Net.Interop
             return Encoding.UTF8.GetString(buffer);
         }
 
-        // When the length is unknown
-        public static string ConvertFromUtf8IntPtrUnknownLength(IntPtr utf8Pointer)
+        /// <brief> Convert a zero-terminated UTF-8 string from an IntPtr to a .NET string.</brief>
+        /// <exception cref="ArgumentNullException"> Thrown when one or more required arguments are null.</exception>
+        /// <param name="utf8Pointer"> Pointer to the UTF8-encoded string to be converted.</param>
+        /// <returns> The converted string.</returns>
+        public static string ConvertFromUtf8IntPtrZeroTerminated(IntPtr utf8Pointer)
         {
             // with .NETCore 2.1 we could use the following code instead:
             //  return Marshal.PtrToStringUTF8(utf8Pointer);
@@ -51,7 +73,7 @@ namespace ImgDoc2Net.Interop
                 length++;
             }
 
-            return ConvertFromUtf8IntPtr(utf8Pointer, length);
+            return Utilities.ConvertFromUtf8IntPtr(utf8Pointer, length);
         }
     }
 }

@@ -4,16 +4,19 @@
 
 namespace ImgDoc2Net.Implementation
 {
+    /// <brief> 
+    /// Version information about the native imgdoc2 library.
+    /// </brief>
     public struct ImgDoc2NativeLibraryVersionInfo
     {
-        public int Major;
-        public int Minor;
-        public int Patch;
-        public string CompilerIdentification;
-        public string BuildType;
-        public string RepositoryUrl;
-        public string RepositoryBranch;
-        public string RepositoryTag;
+        public int Major { get; set; }
+        public int Minor { get; set; }
+        public int Patch { get; set; }
+        public string CompilerIdentification { get; set; }
+        public string BuildType { get; set; }
+        public string RepositoryUrl { get; set; }
+        public string RepositoryBranch { get; set; }
+        public string RepositoryTag { get; set; }
     }
 
     public class ImgDoc2VersionInfo
