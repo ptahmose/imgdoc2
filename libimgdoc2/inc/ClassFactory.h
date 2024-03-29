@@ -8,6 +8,7 @@
 #include "ICreateOptions.h"
 #include "IOpenExistingOptions.h"
 #include "IEnvironment.h"
+#include "VersionInfo.h"
 
 namespace imgdoc2
 {
@@ -18,6 +19,8 @@ namespace imgdoc2
     class ClassFactory
     {
     public:
+        static VersionInfo GetVersionInfo();
+
         /// Creates an options-object for creating a new imgdoc2-document.
         /// \returns    Pointer to a newly create options-object.
         static imgdoc2::ICreateOptions* CreateCreateOptionsPtr();

@@ -89,6 +89,49 @@ void GetStatistics(ImgDoc2StatisticsInterop* statistics_interop)
     }
 }
 
+static void ClearAllocationObject(AllocationObject* allocation_object)
+{
+    allocation_object->pointer_to_memory = nullptr;
+    allocation_object->handle = numeric_limits<intptr_t>::max();
+}
+
+static void CopyStringToAllocationObject(const string& str, AllocMemoryFunctionPointer allocate_memory_function, AllocationObject* allocation_object)
+{
+    size_t size = str.length() + 1;
+    if (allocate_memory_function != nullptr && allocate_memory_function(size, allocation_object))
+    {
+        memcpy(allocation_object->pointer_to_memory, str.c_str(), size);
+        allocation_object->handle = reinterpret_cast<intptr_t>(allocation_object->pointer_to_memory);
+    }
+    else
+    {
+        ClearAllocationObject(allocation_object);
+    }
+}
+
+void GetVersionInfo(VersionInfoInterop* version_info, AllocMemoryFunctionPointer allocate_memory_function)
+{
+    const VersionInfo native_version_info = ClassFactory::GetVersionInfo();
+    version_info->major = native_version_info.major;
+    version_info->minor = native_version_info.minor;
+    version_info->revision = native_version_info.patch;
+
+    CopyStringToAllocationObject(native_version_info.compiler_identification, allocate_memory_function, &version_info->compiler_identification);
+    CopyStringToAllocationObject(native_version_info.build_type, allocate_memory_function, &version_info->build_type);
+    CopyStringToAllocationObject(native_version_info.repository_url, allocate_memory_function, &version_info->repository_url);
+    CopyStringToAllocationObject(native_version_info.repository_branch, allocate_memory_function, &version_info->repository_branch);
+    CopyStringToAllocationObject(native_version_info.repository_tag, allocate_memory_function, &version_info->repository_tag);
+/*    size_t size = native_version_info.compiler_identification.length() + 1;
+    if (allocate_memory_function != nullptr && allocate_memory_function(size,&version_info->compiler_identification))
+    {
+        memcpy(version_info->compiler_identification.pointer_to_memory, native_version_info.compiler_identification.data(), size);
+    }
+    else
+    {
+        ClearAllocationObject(&version_info->compiler_identification);
+    }*/
+}
+
 HandleEnvironmentObject CreateEnvironmentObject(
     std::intptr_t user_parameter,
     void (LIBIMGDOC2_STDCALL* pfn_log)(std::intptr_t userparam, int level, const char* szMessage),

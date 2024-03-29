@@ -2,12 +2,16 @@
 //
 // SPDX-License-Identifier: MIT
 
+using ImgDoc2Net.Implementation;
+
 namespace Imgdoc2cmd
 {
     internal class Program
     {
         static int Main(string[] args)
         {
+            var versionInfo = ImgDoc2Global.GetVersionInfo();
+
             Options options = new Options();
 
             try

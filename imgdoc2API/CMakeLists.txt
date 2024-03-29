@@ -26,7 +26,7 @@ add_library(imgdoc2API  SHARED
                 "cuboiddoubleinterop.h" 
                 "planenormalanddistanceinterop.h" 
                 "imgdoc2apistatistics.h" 
-                "sharedptrwrapper.h")
+                "sharedptrwrapper.h" "versioninfointerop.h" "allocationobject.h")
 
 target_link_libraries(imgdoc2API PRIVATE libimgdoc2)
 

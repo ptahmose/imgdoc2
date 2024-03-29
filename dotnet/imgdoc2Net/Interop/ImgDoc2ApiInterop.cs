@@ -190,10 +190,18 @@ namespace ImgDoc2Net.Interop
                 this.idocwrite3dCommitTransaction = this.GetProcAddressThrowIfNotFound<IDocWrite2d3d_BeginCommitRollbackTransactionDelegate>("IDocWrite3d_CommitTransaction");
                 this.idocwrite3dRollbackTransaction = this.GetProcAddressThrowIfNotFound<IDocWrite2d3d_BeginCommitRollbackTransactionDelegate>("IDocWrite3d_RollbackTransaction");
 
+                this.getVersionInfo =
+                    this.GetProcAddressThrowIfNotFound<GetVersionInfoDelegate>("GetVersionInfo");
+
                 this.funcPtrBlobOutputSetSizeForwarder =
                     Marshal.GetFunctionPointerForDelegate<BlobOutputSetSizeDelegate>(ImgDoc2ApiInterop.BlobOutputSetSizeDelegateObj);
                 this.funcPtrBlobOutputSetDataForwarder =
                     Marshal.GetFunctionPointerForDelegate<BlobOutputSetDataDelegate>(ImgDoc2ApiInterop.BlobOutputSetDataDelegateObj);
+                unsafe
+                {
+                    this.funcPtrAllocateMemoryByteArray =
+                        Marshal.GetFunctionPointerForDelegate<AllocateMemoryDelegate>(ImgDoc2ApiInterop.AllocateMemoryFunctionByteArray);
+                }
 
                 this.InitializeEnvironmentObject();
             }
@@ -265,13 +273,21 @@ namespace ImgDoc2Net.Interop
             string pathOfExecutable = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? string.Empty;
             bool isLinux = Utilities.IsLinux();
 
+            string filenameOfBinary;
             if (!isLinux)
             {
-                yield return Path.Combine(pathOfExecutable, BaseDllNameWindows + ".dll");
+                filenameOfBinary = BaseDllNameWindows + ".dll";
             }
             else
             {
-                yield return Path.Combine(pathOfExecutable, BaseDllNameLinux + ".so");
+                filenameOfBinary = BaseDllNameLinux + ".so";
+            }
+
+            yield return Path.Combine(pathOfExecutable, filenameOfBinary);
+
+            if (!isLinux)
+            {
+                yield return Path.Combine(pathOfExecutable, "runtimes/win-x64/native/" + filenameOfBinary);
             }
         }
     }
@@ -281,6 +297,41 @@ namespace ImgDoc2Net.Interop
     /// </content>
     internal partial class ImgDoc2ApiInterop
     {
+        public ImgDoc2NativeLibraryVersionInfo GetNativeLibraryVersionInfo()
+        {
+            this.ThrowIfNotInitialized();
+
+            unsafe
+            {
+                VersionInfoInterop versionInfoInterop = default(VersionInfoInterop);
+
+                try
+                {
+                    this.getVersionInfo(&versionInfoInterop, this.funcPtrAllocateMemoryByteArray);
+
+                    return new ImgDoc2NativeLibraryVersionInfo()
+                    {
+                        Major = versionInfoInterop.Major,
+                        Minor = versionInfoInterop.Minor,
+                        Patch = versionInfoInterop.Patch,
+                        CompilerIdentification = ImgDoc2ApiInterop.ConvertAllocationObjectToString(in versionInfoInterop.CompilerIdentification),
+                        BuildType = ImgDoc2ApiInterop.ConvertAllocationObjectToString(in versionInfoInterop.BuildType),
+                        RepositoryUrl = ImgDoc2ApiInterop.ConvertAllocationObjectToString(in versionInfoInterop.RepositoryUrl),
+                        RepositoryBranch = ImgDoc2ApiInterop.ConvertAllocationObjectToString(in versionInfoInterop.RepositoryBranch),
+                        RepositoryTag = ImgDoc2ApiInterop.ConvertAllocationObjectToString(in versionInfoInterop.RepositoryTag),
+                    };
+                }
+                finally
+                {
+                    ImgDoc2ApiInterop.FreeAllocationObject(ref versionInfoInterop.CompilerIdentification);
+                    ImgDoc2ApiInterop.FreeAllocationObject(ref versionInfoInterop.BuildType);
+                    ImgDoc2ApiInterop.FreeAllocationObject(ref versionInfoInterop.RepositoryUrl);
+                    ImgDoc2ApiInterop.FreeAllocationObject(ref versionInfoInterop.RepositoryBranch);
+                    ImgDoc2ApiInterop.FreeAllocationObject(ref versionInfoInterop.RepositoryTag);
+                }
+            }
+        }
+
         /// <summary>   Gets the "ImgDoc2Statistics" - information about how many active objects exist. </summary>
         /// <returns>   The "ImgDoc2Statistics". </returns>
         public ImgDoc2Statistics GetStatistics()
@@ -749,7 +800,7 @@ namespace ImgDoc2Net.Interop
         public void DestroyReader3d(IntPtr handleReader)
         {
             this.ThrowIfNotInitialized();
-            
+
             unsafe
             {
                 ImgDoc2ErrorInformation errorInformation;
@@ -777,7 +828,7 @@ namespace ImgDoc2Net.Interop
         public void DestroyWriter3d(IntPtr handleWriter)
         {
             this.ThrowIfNotInitialized();
-            
+
             unsafe
             {
                 ImgDoc2ErrorInformation errorInformation;
@@ -1643,9 +1694,14 @@ namespace ImgDoc2Net.Interop
         /// </summary>
         private readonly IntPtr funcPtrBlobOutputSetDataForwarder;
 
+        /// Function pointer (callable from unmanaged code) to the function "AllocateMemoryFunctionByteArray".
+        private readonly IntPtr funcPtrAllocateMemoryByteArray;
+
         private delegate bool BlobOutputSetSizeDelegate(IntPtr blobOutputObjectHandle, ulong size);
 
         private delegate bool BlobOutputSetDataDelegate(IntPtr blobOutputObjectHandle, ulong offset, ulong size, IntPtr pointerToData);
+
+        private unsafe delegate bool AllocateMemoryDelegate(ulong size, AllocationObjectInterop* allocationObject);
 
         /// <summary>   
         /// This interface is used for "returning data from the unmanaged code". The idea is that the
@@ -1683,6 +1739,16 @@ namespace ImgDoc2Net.Interop
             GCHandle gcHandle = GCHandle.FromIntPtr(blobOutputObjectHandle);
             IBlobOutput blobOutput = gcHandle.Target as IBlobOutput;
             return blobOutput.SetData(offset, size, pointerToData);
+        }
+
+        private static unsafe bool AllocateMemoryFunctionByteArray(ulong size, AllocationObjectInterop* allocationObject)
+        {
+            //return Marshal.AllocHGlobal((int)size);
+            byte[] buffer = new byte[size];
+            GCHandle gcHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            allocationObject->PointerToMemory = gcHandle.AddrOfPinnedObject();
+            allocationObject->Handle = GCHandle.ToIntPtr(gcHandle);
+            return true;
         }
 
         /// <summary>Simplistic implementation of the <see cref="IBlobOutput"/> interface. The data is stored in a .NET-byte array.</summary>
@@ -1908,12 +1974,14 @@ namespace ImgDoc2Net.Interop
         private readonly IDocWrite2d3d_BeginCommitRollbackTransactionDelegate idocwrite3dCommitTransaction;
         private readonly IDocWrite2d3d_BeginCommitRollbackTransactionDelegate idocwrite3dRollbackTransaction;
 
+        private readonly GetVersionInfoDelegate getVersionInfo;
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private unsafe delegate void GetStatisticsDelegate(ImgDoc2StatisticsInterop* statisticsInterop);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private unsafe delegate IntPtr VoidAndReturnIntPtrDelegate();
-        
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private unsafe delegate int IntPtrAndErrorInformationReturnErrorCodeDelegate(IntPtr handle, ImgDoc2ErrorInformation* errorInformation);
 
@@ -2132,6 +2200,11 @@ namespace ImgDoc2Net.Interop
             TileCountPerLayerInterop* tileCountPerLayerInterop,
             ImgDoc2ErrorInformation* errorInformation);
 
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private unsafe delegate void GetVersionInfoDelegate(
+            VersionInfoInterop* versionInfoInterop,
+            IntPtr allocMemoryFunctionPtr);
+
         /// <summary> 
         /// This delegate is corresponding the the APIs IDocWrite2d_BeginTransaction/IDocWrite2d_CommitTransaction/IDocWrite2d_RollbackTransaction
         /// and IDocWrite3d_BeginTransaction/IDocWrite3d_CommitTransaction/IDocWrite3d_RollbackTransaction.
@@ -2155,6 +2228,26 @@ namespace ImgDoc2Net.Interop
         {
             public byte Dimension;
             public int Value;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        private struct AllocationObjectInterop
+        {
+            public IntPtr PointerToMemory;
+            public IntPtr Handle;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        private struct VersionInfoInterop
+        {
+            public int Major;
+            public int Minor;
+            public int Patch;
+            public AllocationObjectInterop CompilerIdentification;
+            public AllocationObjectInterop BuildType;
+            public AllocationObjectInterop RepositoryUrl;
+            public AllocationObjectInterop RepositoryBranch;
+            public AllocationObjectInterop RepositoryTag;
         }
 
         /// <summary>   
@@ -2595,6 +2688,26 @@ namespace ImgDoc2Net.Interop
 
             TileCoordinate tileCoordinate = new TileCoordinate(dimensionValueTuples);
             return tileCoordinate;
+        }
+
+        private static void FreeAllocationObject(ref AllocationObjectInterop allocationObjectInterop)
+        {
+            if (allocationObjectInterop.PointerToMemory != IntPtr.Zero)
+            {
+                GCHandle gcHandle = GCHandle.FromIntPtr(allocationObjectInterop.Handle);
+                gcHandle.Free();
+                allocationObjectInterop.PointerToMemory = IntPtr.Zero;
+            }
+        }
+
+        private static string ConvertAllocationObjectToString(in AllocationObjectInterop allocationObjectInterop)
+        {
+            if (allocationObjectInterop.PointerToMemory == IntPtr.Zero)
+            {
+                return string.Empty;
+            }
+
+            return Utilities.ConvertFromUtf8IntPtrUnknownLength(allocationObjectInterop.PointerToMemory);
         }
 
         private QueryResult InternalReaderQuery(IDocRead2d3d_QueryDelegate nativeQueryFunction, IntPtr handle, IDimensionQueryClause clause, ITileInfoQueryClause tileInfoQueryClause, int maxNumberOfResults)

@@ -84,10 +84,110 @@ set(LibImgDoc2_Srcfiles
          "src/doc/documentMetadataWriter.cpp"
          "src/doc/documentMetadataReader.h"
          "src/doc/documentMetadataReader.cpp" 
-         "src/doc/documentMetadataBase.cpp")
+         "src/doc/documentMetadataBase.cpp"
+         "inc/VersionInfo.h")
 
 add_library(libimgdoc2 STATIC
                 ${LibImgDoc2_Srcfiles})
+
+######################################################################################################
+string(CONCAT libimgdoc2_CompilerIdentification ${CMAKE_CXX_COMPILER_ID} " " ${CMAKE_CXX_COMPILER_VERSION} )
+
+# get the URL of the upstream repository
+execute_process(
+  COMMAND git remote get-url origin
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  OUTPUT_VARIABLE libimgdoc2_REPOSITORYREMOTEURL
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if (NOT DEFINED libimgdoc2_REPOSITORYREMOTEURL OR "${libimgdoc2_REPOSITORYREMOTEURL}" STREQUAL "")
+  set(libCZI_REPOSITORYREMOTEURL "unknown")
+endif()
+
+execute_process(
+  COMMAND git name-rev --name-only HEAD
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  OUTPUT_VARIABLE libimgdoc2_REPOSITORYBRANCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if (NOT DEFINED libimgdoc2_REPOSITORYBRANCH OR "${libimgdoc2_REPOSITORYBRANCH}" STREQUAL "")
+  set(libimgdoc2_REPOSITORYBRANCH "unknown")
+endif()
+
+execute_process(
+  COMMAND  git log -1 --format=%H
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  OUTPUT_VARIABLE libimgdoc2_REPOSITORYHASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if (NOT DEFINED libimgdoc2_REPOSITORYHASH OR "${libimgdoc2_REPOSITORYHASH}" STREQUAL "")
+  set(libimgdoc2_REPOSITORYHASH "unknown")
+endif()
+
+string(CONCAT libimgdoc2_COMPILERIDENTIFICATION ${CMAKE_CXX_COMPILER_ID} " " ${CMAKE_CXX_COMPILER_VERSION} )
+
+set(libimgdoc2_VERSION_MAJOR ${imgdoc2_VERSION_MAJOR})
+set(libimgdoc2_VERSION_MINOR ${imgdoc2_VERSION_MAJOR})
+set(libimgdoc2_VERSION_PATCH ${imgdoc2_VERSION_PATCH})
+
+set(libimgdoc2_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
+
+configure_file (
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/libimgdoc2_config.h.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/libimgdoc2_config.h"
+  ESCAPE_QUOTES @ONLY)
+
+  # Add a custom command that generates a header file with the compiler options
+
+# Add a custom command that generates a header file with the compiler options.
+# This time, we'll handle the escaping more carefully.
+#[[
+add_custom_command(
+    TARGET libimgdoc2 PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo_append "#ifndef COMPILER_OPTIONS_H" > ${CMAKE_BINARY_DIR}/compiler_options.h
+    COMMAND ${CMAKE_COMMAND} -E echo_append "#define COMPILER_OPTIONS_H" >> ${CMAKE_BINARY_DIR}/compiler_options.h
+    COMMAND ${CMAKE_COMMAND} -E echo_append "#define COMPILER_OPTIONS \"" >> ${CMAKE_BINARY_DIR}/compiler_options.h
+    # Double $ to escape for Ninja
+    COMMAND ${CMAKE_COMMAND} -E echo_append "$$<$<BOOL:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_OPTIONS>>:$$<JOIN:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_OPTIONS>,\\\\n\\\\>>" >> ${CMAKE_BINARY_DIR}/compiler_options.h
+    COMMAND ${CMAKE_COMMAND} -E echo_append "\\n$$<$<BOOL:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_DEFINITIONS>>:$$<JOIN:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_DEFINITIONS>,\\\\n\\\\>>\"" >> ${CMAKE_BINARY_DIR}/compiler_options.h
+    COMMAND ${CMAKE_COMMAND} -E echo "#endif // COMPILER_OPTIONS_H" >> ${CMAKE_BINARY_DIR}/compiler_options.h
+)
+
+add_custom_command(
+    TARGET libimgdoc2 PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo_append "$$<$<BOOL:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_OPTIONS>>:$$<JOIN:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_OPTIONS>,\\\\n\\\\>>" > ${CMAKE_CURRENT_BINARY_DIR}/compiler_options.h
+)
+#]]
+
+# Path to the output header
+#set(compiler_options_header "${CMAKE_CURRENT_BINARY_DIR}/compiler_options.h")
+#[[
+add_custom_command(
+    OUTPUT ${compiler_options_header}
+    COMMAND ${CMAKE_COMMAND} -DARGS="libimgdoc2;${compiler_options_header}" -P ${CMAKE_SOURCE_DIR}/cmake/generate_compiler_options.cmake
+#    DEPENDS libimgdoc2
+    COMMENT "Generating compiler options header"
+)
+#]]
+#[[
+add_custom_command(
+    OUTPUT ${compiler_options_header}
+    COMMAND ${CMAKE_COMMAND} 
+        -DOUTPUT_FILE=${compiler_options_header} 
+        -DCOMPILE_OPTIONS="${my_compile_options}" 
+        -DCOMPILE_DEFINITIONS="${my_compile_definitions}"
+        -P ${CMAKE_SOURCE_DIR}/cmake/generate_compiler_options.cmake
+    COMMENT "Generating compiler options header"
+)
+
+
+# Ensure my_executable depends on the generated header
+add_custom_target(generate_compiler_options DEPENDS ${compiler_options_header})
+add_dependencies(libimgdoc2 generate_compiler_options)
+#]]
+
+
+######################################################################################################
 
 # shared libraries need PIC
 set_property(TARGET libimgdoc2 PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -105,3 +205,6 @@ target_compile_definitions(libimgdoc2 PUBLIC _SQLITEIMGDOCSTATICLIB=1)
 target_include_directories(libimgdoc2 INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc> 
   )
+
+  # add the binary tree to the search path for include files so that we will find libimgdoc2_config.h
+target_include_directories(libimgdoc2 PRIVATE  "${CMAKE_CURRENT_BINARY_DIR}")
