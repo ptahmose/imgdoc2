@@ -1629,7 +1629,7 @@ namespace ImgDoc2Net.Interop
                     }
                 }
 
-                return new byte[1];
+                return ImgDoc2ApiInterop.ConvertAllocationObjectToByteArrayAndFreeGcHandle(ref result.Bitmap);
             }
         }
     }

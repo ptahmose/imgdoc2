@@ -4,7 +4,7 @@
 #include "importexport.h"
 #include "errorcodes.h"
 #include "bitmapinfointerop.h"
-#include "decodeimageresultinterop.h"
+#include "decodedimageresultinterop.h"
 
 
 EXTERNAL_API(ImgDoc2ErrorCode) DecodeImageJpgXr(
@@ -13,6 +13,6 @@ EXTERNAL_API(ImgDoc2ErrorCode) DecodeImageJpgXr(
                 std::uint64_t compressed_data_size,
                 std::uint32_t destination_stride,
                 AllocMemoryFunctionPointer allocate_memory_function,
-                DecodeImageResultInterop* result,
+                DecodedImageResultInterop* result,
                 ImgDoc2ErrorInformation* error_information);
 

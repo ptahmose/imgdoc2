@@ -38,7 +38,7 @@ namespace
             std::uint8_t* destination_row = static_cast<std::uint8_t*>(destination_data) + static_cast<size_t>(row) * destination_stride;
 
             // Copy the row from the source image to the destination image
-            std::memcpy(destination_row, source_row, width);
+            std::memcpy(destination_row, source_row, line_length);
         }
     }
 }
@@ -49,7 +49,7 @@ ImgDoc2ErrorCode DecodeImageJpgXr(
                 std::uint64_t compressed_data_size,
                 std::uint32_t destination_stride,
                 AllocMemoryFunctionPointer allocate_memory_function,
-                DecodeImageResultInterop* result,
+                DecodedImageResultInterop* result,
                 ImgDoc2ErrorInformation* error_information)
 {
     if (bitmap_info == nullptr)
@@ -99,16 +99,14 @@ ImgDoc2ErrorCode DecodeImageJpgXr(
 
     auto decoded_bitmap = decoder->Decode(compressed_data, compressed_data_size, libczi_pixel_type, bitmap_info->pixelWidth, bitmap_info->pixelHeight);
 
-    DecodeImageResultInterop result_interop;
-
     ScopedBitmapLockerSP decoder_bitmap_locker(decoded_bitmap);
 
     // the stride for the decoded image is either the one we happen to get from the decoder (in the case that no stride was passed in) or the one that was passed in
-    result_interop.stride = destination_stride == 0 ? decoder_bitmap_locker.stride : destination_stride;
+    result->stride = destination_stride == 0 ? decoder_bitmap_locker.stride : destination_stride;
 
-    uint64_t required_size = static_cast<uint64_t>(result_interop.stride) * bitmap_info->pixelHeight;
+    uint64_t required_size = static_cast<uint64_t>(result->stride) * bitmap_info->pixelHeight;
 
-    const bool success = allocate_memory_function(required_size, &result_interop.bitmap);
+    const bool success = allocate_memory_function(required_size, &result->bitmap);
 
     CopyWithStrideConversion(
         decoder_bitmap_locker.ptrDataRoi,
@@ -116,8 +114,8 @@ ImgDoc2ErrorCode DecodeImageJpgXr(
         decoded_bitmap->GetPixelType(),
         bitmap_info->pixelWidth,
         bitmap_info->pixelHeight,
-        result_interop.bitmap.pointer_to_memory,
-        result_interop.stride);
+        result->bitmap.pointer_to_memory,
+        result->stride);
 
     return ImgDoc2_ErrorCode_OK;
 }

@@ -3,7 +3,7 @@
 #include "allocationobject.h"
 
 #pragma pack(push, 4)
-struct DecodeImageResultInterop
+struct DecodedImageResultInterop
 {
     std::uint32_t stride;
     AllocationObject bitmap;
