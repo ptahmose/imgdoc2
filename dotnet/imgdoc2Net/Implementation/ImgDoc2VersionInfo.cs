@@ -10,12 +10,19 @@ namespace ImgDoc2Net.Implementation
     public struct ImgDoc2NativeLibraryVersionInfo
     {
         public int Major { get; set; }
+
         public int Minor { get; set; }
+
         public int Patch { get; set; }
+
         public string CompilerIdentification { get; set; }
+
         public string BuildType { get; set; }
+
         public string RepositoryUrl { get; set; }
+
         public string RepositoryBranch { get; set; }
+
         public string RepositoryTag { get; set; }
     }
 

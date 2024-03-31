@@ -66,6 +66,12 @@ FetchContent_MakeAvailable(GSL)
 
 add_subdirectory(external/sqlite3)
 
+# make libCZI available (currently used by imgdoc2API and convczi))
+include("${CMAKE_SOURCE_DIR}/cmake/libCZI.cmake")
+FetchContent_GetProperties(libCZI)
+set(LIBCZI_INCLUDE_DIR "${libczi_SOURCE_DIR}/Src/libCZI")
+
+
 add_subdirectory(libimgdoc2)
 add_subdirectory(imgdoc2API)
 
@@ -74,9 +80,9 @@ if (IMGDOC2_BUILD_NATIVEIMGDOC2CMD)
 endif()
 
 if (IMGDOC2_BUILD_CONVCZI)
-  include("${CMAKE_SOURCE_DIR}/cmake/libCZI.cmake")
-  FetchContent_GetProperties(libCZI)
-  set(LIBCZI_INCLUDE_DIR "${libczi_SOURCE_DIR}/Src/libCZI")
+#  include("${CMAKE_SOURCE_DIR}/cmake/libCZI.cmake")
+#  FetchContent_GetProperties(libCZI)
+#  set(LIBCZI_INCLUDE_DIR "${libczi_SOURCE_DIR}/Src/libCZI")
   add_subdirectory(convczi)
 endif()
 

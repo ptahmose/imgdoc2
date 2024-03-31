@@ -1,0 +1,123 @@
+#include "codecsAPI.h"
+#include <libCZI.h>
+#include "imgdoc2APIsupport.h"
+
+using namespace libCZI;
+using namespace std;
+
+namespace
+{
+    libCZI::PixelType ConvertToLibCziPixelType(const std::uint8_t pixel_type)
+    {
+        switch (pixel_type)
+        {
+            case imgdoc2::PixelType::Gray8:
+                return libCZI::PixelType::Gray8;
+            case imgdoc2::PixelType::Gray16:
+                return libCZI::PixelType::Gray16;
+            case imgdoc2::PixelType::Bgr24:
+                return libCZI::PixelType::Bgr24;
+            case imgdoc2::PixelType::Bgr48:
+                return libCZI::PixelType::Bgr48;
+            case imgdoc2::PixelType::Gray32Float:
+                return libCZI::PixelType::Gray32Float;
+            default:
+                return libCZI::PixelType::Invalid;
+        }
+    }
+
+    void CopyWithStrideConversion(const void* source_data, std::uint32_t source_stride, libCZI::PixelType pixel_type,std::uint32_t width, std::uint32_t height, void* destination_data, std::uint32_t destination_stride)
+    {
+        size_t line_length = width * static_cast<size_t>(libCZI::Utils::GetBytesPerPixel(pixel_type));
+
+        // Iterate over each row of the source image
+        for (std::uint32_t row = 0; row < height; row++)
+        {
+            // Calculate the memory address of the current row in the source and destination images
+            const std::uint8_t* source_row = static_cast<const std::uint8_t*>(source_data) + static_cast<size_t>(row) * source_stride;
+            std::uint8_t* destination_row = static_cast<std::uint8_t*>(destination_data) + static_cast<size_t>(row) * destination_stride;
+
+            // Copy the row from the source image to the destination image
+            std::memcpy(destination_row, source_row, width);
+        }
+    }
+}
+
+ImgDoc2ErrorCode DecodeImageJpgXr(
+                const BitmapInfoInterop* bitmap_info,
+                const void* compressed_data,
+                std::uint64_t compressed_data_size,
+                std::uint32_t destination_stride,
+                AllocMemoryFunctionPointer allocate_memory_function,
+                DecodeImageResultInterop* result,
+                ImgDoc2ErrorInformation* error_information)
+{
+    if (bitmap_info == nullptr)
+    {
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("bitmap_info", "must not be null", error_information);
+        return ImgDoc2_ErrorCode_InvalidArgument;
+    }
+
+    if (bitmap_info->pixelWidth == 0 || bitmap_info->pixelHeight == 0)
+    {
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("bitmap_info", "pixelWidth and pixelHeight must be greater than 0", error_information);
+        return ImgDoc2_ErrorCode_InvalidArgument;
+    }
+
+    if (compressed_data_size == 0)
+    {
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("compressed_data_size", "must be greater than 0", error_information);
+        return ImgDoc2_ErrorCode_InvalidArgument;
+    }
+
+    if (compressed_data == nullptr)
+    {
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("compressed_data", "must not be null", error_information);
+        return ImgDoc2_ErrorCode_InvalidArgument;
+    }
+
+    if (allocate_memory_function == nullptr)
+    {
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("allocate_memory_function", "must not be null", error_information);
+        return ImgDoc2_ErrorCode_InvalidArgument;
+    }
+
+    if (result == nullptr)
+    {
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("result", "must not be null", error_information);
+        return ImgDoc2_ErrorCode_InvalidArgument;
+    }
+
+    const libCZI::PixelType libczi_pixel_type = ConvertToLibCziPixelType(bitmap_info->pixelType);
+    if (libczi_pixel_type == libCZI::PixelType::Invalid)
+    {
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("bitmap_info", "pixelType is not supported", error_information);
+        return ImgDoc2_ErrorCode_InvalidArgument;
+    }
+
+    const auto decoder = libCZI::GetDefaultSiteObject(libCZI::SiteObjectType::Default)->GetDecoder(ImageDecoderType::JPXR_JxrLib, nullptr);
+
+    auto decoded_bitmap = decoder->Decode(compressed_data, compressed_data_size, libczi_pixel_type, bitmap_info->pixelWidth, bitmap_info->pixelHeight);
+
+    DecodeImageResultInterop result_interop;
+
+    ScopedBitmapLockerSP decoder_bitmap_locker(decoded_bitmap);
+
+    // the stride for the decoded image is either the one we happen to get from the decoder (in the case that no stride was passed in) or the one that was passed in
+    result_interop.stride = destination_stride == 0 ? decoder_bitmap_locker.stride : destination_stride;
+
+    uint64_t required_size = static_cast<uint64_t>(result_interop.stride) * bitmap_info->pixelHeight;
+
+    const bool success = allocate_memory_function(required_size, &result_interop.bitmap);
+
+    CopyWithStrideConversion(
+        decoder_bitmap_locker.ptrDataRoi,
+        decoder_bitmap_locker.stride,
+        decoded_bitmap->GetPixelType(),
+        bitmap_info->pixelWidth,
+        bitmap_info->pixelHeight,
+        result_interop.bitmap.pointer_to_memory,
+        result_interop.stride);
+
+    return ImgDoc2_ErrorCode_OK;
+}

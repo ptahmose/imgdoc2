@@ -24,7 +24,7 @@ using namespace std;
 
 static ImgDoc2ApiStatistics g_imgdoc2_api_statistics;  ///< Define a static object, which is used to count active instances of objects, which are created by the imgdoc2API.
 
-
+// -> moved to imgdoc2APIsupport
 static void FillOutErrorInformation(const exception& exception, ImgDoc2ErrorInformation* error_information)
 {
     if (error_information != nullptr)
@@ -36,6 +36,7 @@ static void FillOutErrorInformation(const exception& exception, ImgDoc2ErrorInfo
     }
 }
 
+// -> moved to imgdoc2APIsupport
 static void FillOutErrorInformationForInvalidArgument(const char* argument_name, const char* text, ImgDoc2ErrorInformation* error_information)
 {
     if (error_information != nullptr)
@@ -51,6 +52,7 @@ static void FillOutErrorInformationForInvalidArgument(const char* argument_name,
     }
 }
 
+// -> moved to imgdoc2APIsupport
 static void FillOutErrorInformationForInvalidHandle(const char* handle_name, const char* text, ImgDoc2ErrorInformation* error_information)
 {
     if (error_information != nullptr)
@@ -66,6 +68,7 @@ static void FillOutErrorInformationForInvalidHandle(const char* handle_name, con
     }
 }
 
+// -> moved to imgdoc2APIsupport
 static ImgDoc2ErrorCode MapExceptionToReturnValue(const exception& exception)
 {
     if (typeid(exception) == typeid(invalid_argument))
@@ -105,7 +108,7 @@ static void CopyStringToAllocationObject(const string& str, AllocMemoryFunctionP
             allocation_object->pointer_to_memory != nullptr)
     {
         memcpy(allocation_object->pointer_to_memory, str.c_str(), size);
-        allocation_object->handle = reinterpret_cast<intptr_t>(allocation_object->pointer_to_memory);
+        //allocation_object->handle = reinterpret_cast<intptr_t>(allocation_object->pointer_to_memory);
     }
     else
     {

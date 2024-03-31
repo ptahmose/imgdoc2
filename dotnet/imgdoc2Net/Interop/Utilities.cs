@@ -21,6 +21,18 @@ namespace ImgDoc2Net.Interop
             return (p == 4) || (p == 6) || (p == 128);
         }
 
+        public static string ConvertFromUtf8Span(ReadOnlySpan<byte> utf8Span)
+        {
+            unsafe
+            {
+                fixed (byte* ptr = utf8Span)
+                {
+                    IntPtr utf8Pointer = (IntPtr)ptr;
+                    return ConvertFromUtf8IntPtr(utf8Pointer, utf8Span.Length);
+                }
+            }
+        }
+
         /// <brief> 
         /// Convert a UTF-8 string (given by a pointer and a length) into a .NET string.
         /// </brief>

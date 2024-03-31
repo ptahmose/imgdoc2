@@ -193,6 +193,9 @@ namespace ImgDoc2Net.Interop
                 this.getVersionInfo =
                     this.GetProcAddressThrowIfNotFound<GetVersionInfoDelegate>("GetVersionInfo");
 
+                this.decodeImageJpgXr =
+                    this.GetProcAddressThrowIfNotFound<DecodeImageJpgXrDelegate>("DecodeImageJpgXr");
+
                 this.funcPtrBlobOutputSetSizeForwarder =
                     Marshal.GetFunctionPointerForDelegate<BlobOutputSetSizeDelegate>(ImgDoc2ApiInterop.BlobOutputSetSizeDelegateObj);
                 this.funcPtrBlobOutputSetDataForwarder =
@@ -315,11 +318,11 @@ namespace ImgDoc2Net.Interop
                         Major = versionInfoInterop.Major,
                         Minor = versionInfoInterop.Minor,
                         Patch = versionInfoInterop.Patch,
-                        CompilerIdentification = ImgDoc2ApiInterop.ConvertAllocationObjectToString(in versionInfoInterop.CompilerIdentification),
-                        BuildType = ImgDoc2ApiInterop.ConvertAllocationObjectToString(in versionInfoInterop.BuildType),
-                        RepositoryUrl = ImgDoc2ApiInterop.ConvertAllocationObjectToString(in versionInfoInterop.RepositoryUrl),
-                        RepositoryBranch = ImgDoc2ApiInterop.ConvertAllocationObjectToString(in versionInfoInterop.RepositoryBranch),
-                        RepositoryTag = ImgDoc2ApiInterop.ConvertAllocationObjectToString(in versionInfoInterop.RepositoryTag),
+                        CompilerIdentification = Utilities.ConvertFromUtf8Span(ImgDoc2ApiInterop.ConvertAllocationObjectToByteArrayAndFreeGcHandle(ref versionInfoInterop.CompilerIdentification)),
+                        BuildType = Utilities.ConvertFromUtf8Span(ImgDoc2ApiInterop.ConvertAllocationObjectToByteArrayAndFreeGcHandle(ref versionInfoInterop.BuildType)),
+                        RepositoryUrl = Utilities.ConvertFromUtf8Span(ImgDoc2ApiInterop.ConvertAllocationObjectToByteArrayAndFreeGcHandle(ref versionInfoInterop.RepositoryUrl)),
+                        RepositoryBranch = Utilities.ConvertFromUtf8Span(ImgDoc2ApiInterop.ConvertAllocationObjectToByteArrayAndFreeGcHandle(ref versionInfoInterop.RepositoryBranch)),
+                        RepositoryTag = Utilities.ConvertFromUtf8Span(ImgDoc2ApiInterop.ConvertAllocationObjectToByteArrayAndFreeGcHandle(ref versionInfoInterop.RepositoryTag)),
                     };
                 }
                 finally
@@ -1593,6 +1596,44 @@ namespace ImgDoc2Net.Interop
         }
     }
 
+    internal partial class ImgDoc2ApiInterop
+    {
+        public Memory<byte> DecodeJpgXr(Span<byte> compressedData, PixelType pixelType, int width, int height)
+        {
+            this.ThrowIfNotInitialized();
+
+            unsafe
+            {
+                BitmapInfoInterop bitmapInfoInterop = default(BitmapInfoInterop);
+                bitmapInfoInterop.PixelType = (byte)pixelType;
+                bitmapInfoInterop.PixelWidth = (uint)width;
+                bitmapInfoInterop.PixelHeight = (uint)height;
+
+                DecodedImageResultInterop result = default(DecodedImageResultInterop);
+                ImgDoc2ErrorInformation errorInformation;
+
+                fixed (byte* pointerToCompressedData = compressedData)
+                {
+                    int returnCode = this.decodeImageJpgXr(
+                        &bitmapInfoInterop,
+                        new IntPtr(pointerToCompressedData),
+                        (ulong)compressedData.Length,
+                        0,
+                        this.funcPtrAllocateMemoryByteArray,
+                        &result,
+                        &errorInformation);
+
+                    if (returnCode != ImgDoc2_ErrorCode_OK)
+                    {
+                        throw new Exception("Error from 'DecodeImageJpgXr'.");
+                    }
+                }
+
+                return new byte[1];
+            }
+        }
+    }
+
     /// <content> 
     /// Here we gather "simple overloads" of the interface functions.
     /// </content>
@@ -1990,6 +2031,8 @@ namespace ImgDoc2Net.Interop
 
         private readonly GetVersionInfoDelegate getVersionInfo;
 
+        private readonly DecodeImageJpgXrDelegate decodeImageJpgXr;
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private unsafe delegate void GetStatisticsDelegate(ImgDoc2StatisticsInterop* statisticsInterop);
 
@@ -2231,6 +2274,16 @@ namespace ImgDoc2Net.Interop
             IntPtr write2d3dHandle,
             ImgDoc2ErrorInformation* errorInformation);
 
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private unsafe delegate int DecodeImageJpgXrDelegate(
+            BitmapInfoInterop* bitmapInfoInterop,
+            IntPtr pointerToCompressedData,
+            ulong sizeOfCompressedData,
+            uint destinationStride,
+            IntPtr allocMemoryFunctionPtr,
+            DecodedImageResultInterop* result,
+            ImgDoc2ErrorInformation* errorInformation);
+
         [StructLayout(LayoutKind.Sequential, Pack = 4)]
         private unsafe struct ImgDoc2ErrorInformation
         {
@@ -2458,6 +2511,21 @@ namespace ImgDoc2Net.Interop
             {
                 return (numberOfElements * Marshal.SizeOf<PerLayerTileCountInterop>()) + (2 * Marshal.SizeOf<uint>());
             }
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        private struct DecodedImageResultInterop
+        {
+            public uint Stride;
+            public AllocationObjectInterop Bitmap;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        private struct BitmapInfoInterop
+        {
+            public byte PixelType;
+            public uint PixelWidth;
+            public uint PixelHeight;
         }
     }
 
@@ -2722,6 +2790,20 @@ namespace ImgDoc2Net.Interop
             }
 
             return Utilities.ConvertFromUtf8IntPtrZeroTerminated(allocationObjectInterop.PointerToMemory);
+        }
+
+        private static byte[] ConvertAllocationObjectToByteArrayAndFreeGcHandle(ref AllocationObjectInterop allocationObjectInterop)
+        {
+            if (allocationObjectInterop.PointerToMemory == IntPtr.Zero)
+            {
+                return Array.Empty<byte>();
+            }
+
+            GCHandle gcHandle = GCHandle.FromIntPtr(allocationObjectInterop.Handle);
+            byte[] result = (byte[])gcHandle.Target;
+            gcHandle.Free();
+            allocationObjectInterop.PointerToMemory = IntPtr.Zero;
+            return result;
         }
 
         private QueryResult InternalReaderQuery(IDocRead2d3d_QueryDelegate nativeQueryFunction, IntPtr handle, IDimensionQueryClause clause, ITileInfoQueryClause tileInfoQueryClause, int maxNumberOfResults)
