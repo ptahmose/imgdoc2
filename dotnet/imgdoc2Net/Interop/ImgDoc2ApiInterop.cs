@@ -297,6 +297,10 @@ namespace ImgDoc2Net.Interop
     /// </content>
     internal partial class ImgDoc2ApiInterop
     {
+        /// <summary>
+        /// Retrieves the version information of the native library.
+        /// </summary>
+        /// <returns>The version information of the native library.</returns>
         public ImgDoc2NativeLibraryVersionInfo GetNativeLibraryVersionInfo()
         {
             this.ThrowIfNotInitialized();
@@ -327,6 +331,8 @@ namespace ImgDoc2Net.Interop
                 }
                 finally
                 {
+                    // Note: The un-pinning of the byte-arrays is done in the ConvertAllocationObjectToByteArrayAndFreeGcHandle-method already,
+                    //        so this under normal circumstances should not be necessary (it is just a safety-net e.g. if an exception is thrown).
                     ImgDoc2ApiInterop.FreeAllocationObject(ref versionInfoInterop.CompilerIdentification);
                     ImgDoc2ApiInterop.FreeAllocationObject(ref versionInfoInterop.BuildType);
                     ImgDoc2ApiInterop.FreeAllocationObject(ref versionInfoInterop.RepositoryUrl);

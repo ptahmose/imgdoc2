@@ -30,10 +30,6 @@ namespace ImgDoc2Net.Implementation
     {
         public ImgDoc2NativeLibraryVersionInfo NativeLibraryVersion { get; set; }
 
-        public string NativeImgDoc2LibraryVersionInfo { get; set; }
-
-        public string NativeImgDoc2BuildInformation { get; set; }
-
         public string ManagedImgDoc2LibraryVersionInfo { get; set; }
     }
 }
