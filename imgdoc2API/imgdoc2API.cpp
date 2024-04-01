@@ -15,76 +15,15 @@
 #include "utilities.h"
 #include "imgdoc2apistatistics.h"
 #include "sharedptrwrapper.h"
-#include <imgdoc2.h>
+#include "imgdoc2APIsupport.h"
 
-#include "gsl/narrow"
+#include <imgdoc2.h>
+#include <gsl/narrow>
 
 using namespace imgdoc2;
 using namespace std;
 
 static ImgDoc2ApiStatistics g_imgdoc2_api_statistics;  ///< Define a static object, which is used to count active instances of objects, which are created by the imgdoc2API.
-
-// -> moved to imgdoc2APIsupport
-static void FillOutErrorInformation(const exception& exception, ImgDoc2ErrorInformation* error_information)
-{
-    if (error_information != nullptr)
-    {
-        const auto error_message = exception.what();
-
-        // ensure that the string is always null-terminated, even in the case of truncation
-        Utilities::copy_string_to_fixed_size(error_message, error_information->message, ImgDoc2ErrorInformation::kMaxMessageLength);
-    }
-}
-
-// -> moved to imgdoc2APIsupport
-static void FillOutErrorInformationForInvalidArgument(const char* argument_name, const char* text, ImgDoc2ErrorInformation* error_information)
-{
-    if (error_information != nullptr)
-    {
-        stringstream ss;
-        ss << "Argument '" << argument_name << "'";
-        if (text != nullptr)
-        {
-            ss << ": " << text;
-        }
-
-        Utilities::copy_string_to_fixed_size(ss.str().c_str(), error_information->message, ImgDoc2ErrorInformation::kMaxMessageLength);
-    }
-}
-
-// -> moved to imgdoc2APIsupport
-static void FillOutErrorInformationForInvalidHandle(const char* handle_name, const char* text, ImgDoc2ErrorInformation* error_information)
-{
-    if (error_information != nullptr)
-    {
-        stringstream ss;
-        ss << "Handle '" << handle_name << "'";
-        if (text != nullptr)
-        {
-            ss << ": " << text;
-        }
-
-        Utilities::copy_string_to_fixed_size(ss.str().c_str(), error_information->message, ImgDoc2ErrorInformation::kMaxMessageLength);
-    }
-}
-
-// -> moved to imgdoc2APIsupport
-static ImgDoc2ErrorCode MapExceptionToReturnValue(const exception& exception)
-{
-    if (typeid(exception) == typeid(invalid_argument))
-    {
-        return ImgDoc2_ErrorCode_InvalidArgument;
-    }
-
-    if (typeid(exception) == typeid(non_existing_tile_exception))
-    {
-        return ImgDoc2_Invalid_TileId;
-    }
-
-    // TODO(Jbl) - add additional exception types
-
-    return ImgDoc2_ErrorCode_UnspecifiedError;
-}
 
 void GetStatistics(ImgDoc2StatisticsInterop* statistics_interop)
 {
@@ -163,7 +102,7 @@ ImgDoc2ErrorCode DestroyEnvironmentObject(HandleEnvironmentObject handle, ImgDoc
     const auto object = reinterpret_cast<SharedPtrWrapper<IHostingEnvironment>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleEnvironmentObject", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleEnvironmentObject", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -182,7 +121,7 @@ ImgDoc2ErrorCode DestroyCreateOptions(HandleCreateOptions handle, ImgDoc2ErrorIn
     const auto object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -202,7 +141,7 @@ ImgDoc2ErrorCode DestroyOpenExistingOptions(HandleOpenExistingOptions handle, Im
     const auto object = reinterpret_cast<PtrWrapper<IOpenExistingOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleOpenExistingOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleOpenExistingOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -225,7 +164,7 @@ ImgDoc2ErrorCode CreateNewDocument(HandleCreateOptions create_options, HandleEnv
         const auto hosting_environment_object = reinterpret_cast<SharedPtrWrapper<IHostingEnvironment>*>(handle_environment_object);  // NOLINT(performance-no-int-to-ptr)
         if (!hosting_environment_object->IsValid())
         {
-            FillOutErrorInformationForInvalidHandle("HandleEnvironmentObject", "The handle is invalid.", error_information);
+            ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleEnvironmentObject", "The handle is invalid.", error_information);
             return ImgDoc2_ErrorCode_InvalidHandle;
         }
 
@@ -237,7 +176,7 @@ ImgDoc2ErrorCode CreateNewDocument(HandleCreateOptions create_options, HandleEnv
         const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(create_options);  // NOLINT(performance-no-int-to-ptr)
         if (!create_options_object->IsValid())
         {
-            FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+            ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
             return ImgDoc2_ErrorCode_InvalidHandle;
         }
 
@@ -245,8 +184,8 @@ ImgDoc2ErrorCode CreateNewDocument(HandleCreateOptions create_options, HandleEnv
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     auto shared_imgdoc_wrapping_object = new SharedPtrWrapper<IDoc>{ imgdoc2 };
@@ -273,7 +212,7 @@ ImgDoc2ErrorCode OpenExistingDocument(
         const auto hosting_environment_object = reinterpret_cast<SharedPtrWrapper<IHostingEnvironment>*>(handle_environment_object);  // NOLINT(performance-no-int-to-ptr)
         if (!hosting_environment_object->IsValid())
         {
-            FillOutErrorInformationForInvalidHandle("HandleEnvironmentObject", "The handle is invalid.", error_information);
+            ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleEnvironmentObject", "The handle is invalid.", error_information);
             return ImgDoc2_ErrorCode_InvalidHandle;
         }
 
@@ -285,7 +224,7 @@ ImgDoc2ErrorCode OpenExistingDocument(
         const auto open_existing_options_object = reinterpret_cast<PtrWrapper<IOpenExistingOptions>*>(open_existing_options);  // NOLINT(performance-no-int-to-ptr)
         if (!open_existing_options_object->IsValid())
         {
-            FillOutErrorInformationForInvalidHandle("HandleOpenExistingOptions", "The handle is invalid.", error_information);
+            ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleOpenExistingOptions", "The handle is invalid.", error_information);
             return ImgDoc2_ErrorCode_InvalidHandle;
         }
 
@@ -293,8 +232,8 @@ ImgDoc2ErrorCode OpenExistingDocument(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     auto shared_imgdoc_wrapping_object = new SharedPtrWrapper<IDoc>{ imgdoc2 };
@@ -308,7 +247,7 @@ ImgDoc2ErrorCode DestroyDocument(HandleDoc handle, ImgDoc2ErrorInformation* erro
     const auto object = reinterpret_cast<SharedPtrWrapper<IDoc>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDoc", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDoc", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -321,14 +260,14 @@ ImgDoc2ErrorCode IDoc_GetReader2d(HandleDoc handle_document, HandleDocRead2D* do
 {
     if (document_read2d == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("document_read2d", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("document_read2d", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
     const auto document_object = reinterpret_cast<SharedPtrWrapper<IDoc>*>(handle_document);  // NOLINT(performance-no-int-to-ptr)
     if (!document_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDoc", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDoc", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -352,7 +291,7 @@ ImgDoc2ErrorCode DestroyReader2d(HandleDocRead2D handle, ImgDoc2ErrorInformation
     const auto object = reinterpret_cast<SharedPtrWrapper<IDocRead2d>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -365,14 +304,14 @@ ImgDoc2ErrorCode IDoc_GetReader3d(HandleDoc handle_document, HandleDocRead3D* do
 {
     if (document_read3d == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("document_read3d", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("document_read3d", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
     const auto document_object = reinterpret_cast<SharedPtrWrapper<IDoc>*>(handle_document);  // NOLINT(performance-no-int-to-ptr)
     if (!document_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDoc", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDoc", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -397,7 +336,7 @@ ImgDoc2ErrorCode DestroyReader3d(HandleDocRead3D handle, ImgDoc2ErrorInformation
     const auto object = reinterpret_cast<SharedPtrWrapper<IDocRead3d>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -410,14 +349,14 @@ ImgDoc2ErrorCode IDoc_GetWriter2d(HandleDoc handle_document, HandleDocWrite2D* d
 {
     if (document_writer2d == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("document_writer2d", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("document_writer2d", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
     const auto document_object = reinterpret_cast<SharedPtrWrapper<IDoc>*>(handle_document);  // NOLINT(performance-no-int-to-ptr)
     if (!document_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDoc", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDoc", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -441,7 +380,7 @@ ImgDoc2ErrorCode DestroyWriter2d(HandleDocWrite2D handle, ImgDoc2ErrorInformatio
     const auto object = reinterpret_cast<SharedPtrWrapper<IDocWrite2d>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocWrite2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocWrite2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -454,14 +393,14 @@ ImgDoc2ErrorCode IDoc_GetWriter3d(HandleDoc handle_document, HandleDocWrite3D* d
 {
     if (document_writer3d == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("document_writer3d", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("document_writer3d", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
     const auto document_object = reinterpret_cast<SharedPtrWrapper<IDoc>*>(handle_document);  // NOLINT(performance-no-int-to-ptr)
     if (!document_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDoc", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDoc", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -485,7 +424,7 @@ ImgDoc2ErrorCode DestroyWriter3d(HandleDocWrite2D handle, ImgDoc2ErrorInformatio
     const auto object = reinterpret_cast<SharedPtrWrapper<IDocWrite3d>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocWrite2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocWrite2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -499,7 +438,7 @@ ImgDoc2ErrorCode CreateOptions_SetFilename(HandleCreateOptions handle, const cha
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -512,7 +451,7 @@ ImgDoc2ErrorCode OpenExistingOptions_SetFilename(HandleOpenExistingOptions handl
     const auto open_existing_options_object = reinterpret_cast<PtrWrapper<IOpenExistingOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!open_existing_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleOpenExistingOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleOpenExistingOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -525,7 +464,7 @@ ImgDoc2ErrorCode CreateOptions_SetDocumentType(HandleCreateOptions handle, std::
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -536,8 +475,8 @@ ImgDoc2ErrorCode CreateOptions_SetDocumentType(HandleCreateOptions handle, std::
     }
     catch (const std::exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     return ImgDoc2_ErrorCode_OK;
@@ -548,7 +487,7 @@ ImgDoc2ErrorCode CreateOptions_SetUseSpatialIndex(HandleCreateOptions handle, bo
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -561,7 +500,7 @@ ImgDoc2ErrorCode CreateOptions_SetUseBlobTable(HandleCreateOptions handle, bool 
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -574,7 +513,7 @@ ImgDoc2ErrorCode CreateOptions_AddIndexForDimension(HandleCreateOptions handle, 
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -587,7 +526,7 @@ static ImgDoc2ErrorCode ReturnStringHelper(const tGetString& getString, char* fi
 {
     if (size == nullptr || *size < 1)
     {
-        FillOutErrorInformationForInvalidArgument("size", "must not be null and greater than zero", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("size", "must not be null and greater than zero", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
@@ -607,7 +546,7 @@ ImgDoc2ErrorCode CreateOptions_GetFilename(HandleCreateOptions handle, char* fil
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -626,7 +565,7 @@ ImgDoc2ErrorCode OpenExistingOptions_GetFilename(HandleOpenExistingOptions handl
     const auto open_existing_options_object = reinterpret_cast<PtrWrapper<IOpenExistingOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!open_existing_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleOpenExistingOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleOpenExistingOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -644,14 +583,14 @@ ImgDoc2ErrorCode CreateOptions_GetDocumentType(HandleCreateOptions handle, std::
 {
     if (document_type_interop == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("document_type_interop", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("document_type_interop", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -665,7 +604,7 @@ ImgDoc2ErrorCode CreateOptions_GetUseSpatialIndex(HandleCreateOptions handle, bo
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -683,7 +622,7 @@ ImgDoc2ErrorCode CreateOptions_GetUseBlobTable(HandleCreateOptions handle, bool*
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -701,7 +640,7 @@ ImgDoc2ErrorCode CreateOptions_AddDimension(HandleCreateOptions handle, std::uin
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -711,8 +650,8 @@ ImgDoc2ErrorCode CreateOptions_AddDimension(HandleCreateOptions handle, std::uin
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     return ImgDoc2_ErrorCode_OK;
@@ -723,7 +662,7 @@ ImgDoc2ErrorCode CreateOptions_AddIndexedDimension(HandleCreateOptions handle, s
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -733,8 +672,8 @@ ImgDoc2ErrorCode CreateOptions_AddIndexedDimension(HandleCreateOptions handle, s
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     return ImgDoc2_ErrorCode_OK;
@@ -750,7 +689,7 @@ ImgDoc2ErrorCode CreateOptions_GetDimensions(HandleCreateOptions handle, std::ui
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -775,14 +714,14 @@ ImgDoc2ErrorCode CreateOptions_GetIndexedDimensions(HandleCreateOptions handle, 
 {
     if (elements_count == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("elements_count", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("elements_count", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
     const auto create_options_object = reinterpret_cast<PtrWrapper<ICreateOptions>*>(handle);  // NOLINT(performance-no-int-to-ptr)
     if (!create_options_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleCreateOptions", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -816,13 +755,13 @@ ImgDoc2ErrorCode IDocWrite2d_AddTile(
 {
     if (tile_coordinate_interop == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("tile_coordinate_interop", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("tile_coordinate_interop", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
     if (logical_position_info_interop == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("logical_position_info_interop", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("logical_position_info_interop", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
@@ -834,7 +773,7 @@ ImgDoc2ErrorCode IDocWrite2d_AddTile(
     const auto write2d_object = reinterpret_cast<SharedPtrWrapper<IDocWrite2d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!write2d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocWrite2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocWrite2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -857,8 +796,8 @@ ImgDoc2ErrorCode IDocWrite2d_AddTile(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     return ImgDoc2_ErrorCode_OK;
@@ -877,13 +816,13 @@ ImgDoc2ErrorCode IDocWrite3d_AddBrick(
 {
     if (tile_coordinate_interop == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("tile_coordinate_interop", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("tile_coordinate_interop", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
     if (logical_position_info_interop == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("logical_position_info_interop", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("logical_position_info_interop", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
@@ -895,7 +834,7 @@ ImgDoc2ErrorCode IDocWrite3d_AddBrick(
     const auto write3d_object = reinterpret_cast<SharedPtrWrapper<IDocWrite3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!write3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocWrite3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocWrite3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -918,8 +857,8 @@ ImgDoc2ErrorCode IDocWrite3d_AddBrick(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     return ImgDoc2_ErrorCode_OK;
@@ -935,7 +874,7 @@ ImgDoc2ErrorCode IDocRead2d_Query(
     const auto reader2d_object = reinterpret_cast<SharedPtrWrapper<IDocRead2d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader2d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -971,8 +910,8 @@ ImgDoc2ErrorCode IDocRead2d_Query(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     result->element_count = results_retrieved_count;
@@ -990,7 +929,7 @@ ImgDoc2ErrorCode IDocRead3d_Query(
     const auto reader3d_object = reinterpret_cast<SharedPtrWrapper<IDocRead3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1025,8 +964,8 @@ ImgDoc2ErrorCode IDocRead3d_Query(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     result->element_count = results_retrieved_count;
@@ -1044,7 +983,7 @@ ImgDoc2ErrorCode IDocRead2d_GetTilesIntersectingRect(
     const auto reader2d_object = reinterpret_cast<SharedPtrWrapper<IDocRead2d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader2d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1082,8 +1021,8 @@ ImgDoc2ErrorCode IDocRead2d_GetTilesIntersectingRect(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     result->element_count = results_retrieved_count;
@@ -1102,7 +1041,7 @@ ImgDoc2ErrorCode IDocRead3d_GetBricksIntersectingCuboid(
     const auto reader3d_object = reinterpret_cast<SharedPtrWrapper<IDocRead3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1139,8 +1078,8 @@ ImgDoc2ErrorCode IDocRead3d_GetBricksIntersectingCuboid(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     result->element_count = results_retrieved_count;
@@ -1158,7 +1097,7 @@ ImgDoc2ErrorCode IDocRead3d_GetBricksIntersectingPlane(
     const auto reader3d_object = reinterpret_cast<SharedPtrWrapper<IDocRead3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1194,8 +1133,8 @@ ImgDoc2ErrorCode IDocRead3d_GetBricksIntersectingPlane(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     result->element_count = results_retrieved_count;
@@ -1215,7 +1154,7 @@ ImgDoc2ErrorCode IDocRead2d_ReadTileData(
     const auto reader2d_object = reinterpret_cast<SharedPtrWrapper<IDocRead2d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader2d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1228,8 +1167,8 @@ ImgDoc2ErrorCode IDocRead2d_ReadTileData(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     return ImgDoc2_ErrorCode_OK;
@@ -1248,7 +1187,7 @@ ImgDoc2ErrorCode IDocRead3d_ReadBrickData(
     const auto reader3d_object = reinterpret_cast<SharedPtrWrapper<IDocRead3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1261,8 +1200,8 @@ ImgDoc2ErrorCode IDocRead3d_ReadBrickData(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     return ImgDoc2_ErrorCode_OK;
@@ -1281,7 +1220,7 @@ ImgDoc2ErrorCode IDocRead2d_ReadTileInfo(
     const auto reader2d_object = reinterpret_cast<SharedPtrWrapper<IDocRead2d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader2d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1301,8 +1240,8 @@ ImgDoc2ErrorCode IDocRead2d_ReadTileInfo(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     if (tile_coordinate_interop != nullptr)
@@ -1340,7 +1279,7 @@ ImgDoc2ErrorCode IDocRead3d_ReadBrickInfo(
     const auto reader3d_object = reinterpret_cast<SharedPtrWrapper<IDocRead3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1359,8 +1298,8 @@ ImgDoc2ErrorCode IDocRead3d_ReadBrickInfo(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     if (tile_coordinate_interop != nullptr)
@@ -1394,13 +1333,13 @@ static ImgDoc2ErrorCode IDocInfo_GetTileDimensions(
 {
     if (count == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("count", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("count", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
     if (*count > 0 && dimensions == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("dimensions", "must not be null (if a count > 0 was given)", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("dimensions", "must not be null (if a count > 0 was given)", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
@@ -1417,7 +1356,7 @@ ImgDoc2ErrorCode IDocInfo2d_GetTileDimensions(
     const auto reader2d_object = reinterpret_cast<SharedPtrWrapper<IDocRead2d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader2d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1434,7 +1373,7 @@ ImgDoc2ErrorCode IDocInfo3d_GetTileDimensions(
     const auto reader3d_object = reinterpret_cast<SharedPtrWrapper<IDocRead3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1452,13 +1391,13 @@ static ImgDoc2ErrorCode IDocInfo_GetMinMaxForTileDimensions(
 {
     if (dimensions == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("dimensions", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("dimensions", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
     if (result == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("result", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("result", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
@@ -1471,8 +1410,8 @@ static ImgDoc2ErrorCode IDocInfo_GetMinMaxForTileDimensions(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     for (uint32_t i = 0; i < count; ++i)
@@ -1495,7 +1434,7 @@ ImgDoc2ErrorCode IDocInfo2d_GetMinMaxForTileDimensions(
     const auto reader2d_object = reinterpret_cast<SharedPtrWrapper<IDocRead2d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader2d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1513,7 +1452,7 @@ ImgDoc2ErrorCode IDocInfo3d_GetMinMaxForTileDimensions(
     const auto reader3d_object = reinterpret_cast<SharedPtrWrapper<IDocRead3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1532,7 +1471,7 @@ ImgDoc2ErrorCode IDocInfo2d_GetBoundingBoxForTiles(
     const auto reader2d_object = reinterpret_cast<SharedPtrWrapper<IDocRead2d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader2d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1556,8 +1495,8 @@ ImgDoc2ErrorCode IDocInfo2d_GetBoundingBoxForTiles(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     if (min_x != nullptr)
@@ -1596,7 +1535,7 @@ ImgDoc2ErrorCode IDocInfo3d_GetBoundingBoxForBricks(
     const auto reader3d_object = reinterpret_cast<SharedPtrWrapper<IDocRead3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1625,8 +1564,8 @@ ImgDoc2ErrorCode IDocInfo3d_GetBoundingBoxForBricks(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     if (min_x != nullptr)
@@ -1670,7 +1609,7 @@ static ImgDoc2ErrorCode IDocInfo_GetTotalTileCount(
 {
     if (total_tile_count == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("total_tile_count", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("total_tile_count", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
@@ -1680,8 +1619,8 @@ static ImgDoc2ErrorCode IDocInfo_GetTotalTileCount(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     return ImgDoc2_ErrorCode_OK;
@@ -1695,7 +1634,7 @@ ImgDoc2ErrorCode IDocInfo2d_GetTotalTileCount(
     const auto reader2d_object = reinterpret_cast<SharedPtrWrapper<IDocRead2d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader2d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1711,7 +1650,7 @@ ImgDoc2ErrorCode IDocInfo3d_GetTotalTileCount(
     const auto reader3d_object = reinterpret_cast<SharedPtrWrapper<IDocRead3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1727,7 +1666,7 @@ static ImgDoc2ErrorCode IDocInfo_GetTileCountPerLayer(
 {
     if (tile_count_per_layer_interop == nullptr)
     {
-        FillOutErrorInformationForInvalidArgument("tile_count_per_layer_interop", "must not be null", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("tile_count_per_layer_interop", "must not be null", error_information);
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
@@ -1749,8 +1688,8 @@ static ImgDoc2ErrorCode IDocInfo_GetTileCountPerLayer(
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     return ImgDoc2_ErrorCode_OK;
@@ -1764,7 +1703,7 @@ ImgDoc2ErrorCode IDocInfo2d_GetTileCountPerLayer(
     const auto reader2d_object = reinterpret_cast<SharedPtrWrapper<IDocRead2d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader2d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1780,7 +1719,7 @@ ImgDoc2ErrorCode IDocInfo3d_GetTileCountPerLayer(
     const auto reader3d_object = reinterpret_cast<SharedPtrWrapper<IDocRead3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!reader3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1793,7 +1732,7 @@ static ImgDoc2ErrorCode IDocWriter2d_TransactionCommon(HandleDocWrite2D handle, 
     const auto writer2d_object = reinterpret_cast<SharedPtrWrapper<IDocWrite2d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!writer2d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocWrite2D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocWrite2D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1804,8 +1743,8 @@ static ImgDoc2ErrorCode IDocWriter2d_TransactionCommon(HandleDocWrite2D handle, 
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     return ImgDoc2_ErrorCode_OK;
@@ -1831,7 +1770,7 @@ static ImgDoc2ErrorCode IDocWriter3d_TransactionCommon(HandleDocWrite3D handle, 
     const auto writer3d_object = reinterpret_cast<SharedPtrWrapper<IDocWrite3d>*>(handle); // NOLINT(performance-no-int-to-ptr)
     if (!writer3d_object->IsValid())
     {
-        FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
+        ImgDoc2ApiSupport::FillOutErrorInformationForInvalidHandle("HandleDocRead3D", "The handle is invalid.", error_information);
         return ImgDoc2_ErrorCode_InvalidHandle;
     }
 
@@ -1842,8 +1781,8 @@ static ImgDoc2ErrorCode IDocWriter3d_TransactionCommon(HandleDocWrite3D handle, 
     }
     catch (exception& exception)
     {
-        FillOutErrorInformation(exception, error_information);
-        return MapExceptionToReturnValue(exception);
+        ImgDoc2ApiSupport::FillOutErrorInformation(exception, error_information);
+        return ImgDoc2ApiSupport::MapExceptionToReturnValue(exception);
     }
 
     return ImgDoc2_ErrorCode_OK;

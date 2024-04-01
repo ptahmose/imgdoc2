@@ -42,6 +42,17 @@
     }
 }
 
+/*static*/void ImgDoc2ApiSupport::FillOutErrorInformationForAllocationFailure(size_t required_size, ImgDoc2ErrorInformation* error_information)
+{
+    if (error_information != nullptr)
+    {
+        stringstream ss;
+        ss << "Allocation failure: " << required_size << " bytes required";
+
+        Utilities::copy_string_to_fixed_size(ss.str().c_str(), error_information->message, ImgDoc2ErrorInformation::kMaxMessageLength);
+    }
+}
+
 /*static*/ImgDoc2ErrorCode ImgDoc2ApiSupport::MapExceptionToReturnValue(const std::exception& exception)
 {
     if (typeid(exception) == typeid(invalid_argument))

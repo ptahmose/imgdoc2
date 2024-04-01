@@ -26,9 +26,9 @@ namespace
         }
     }
 
-    void CopyWithStrideConversion(const void* source_data, std::uint32_t source_stride, libCZI::PixelType pixel_type,std::uint32_t width, std::uint32_t height, void* destination_data, std::uint32_t destination_stride)
+    void CopyWithStrideConversion(const void* source_data, std::uint32_t source_stride, libCZI::PixelType pixel_type, std::uint32_t width, std::uint32_t height, void* destination_data, std::uint32_t destination_stride)
     {
-        size_t line_length = width * static_cast<size_t>(libCZI::Utils::GetBytesPerPixel(pixel_type));
+        const size_t line_length = width * static_cast<size_t>(libCZI::Utils::GetBytesPerPixel(pixel_type));
 
         // Iterate over each row of the source image
         for (std::uint32_t row = 0; row < height; row++)
@@ -88,6 +88,15 @@ ImgDoc2ErrorCode DecodeImageJpgXr(
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
+    if (destination_stride > 0)
+    {
+        if (destination_stride < bitmap_info->pixelWidth * libCZI::Utils::GetBytesPerPixel(ConvertToLibCziPixelType(bitmap_info->pixelType)))
+        {
+            ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("destination_stride", "must be either be zero (which means that the stride is choosen by this function) greater than or equal to pixelWidth * bytes per pixel", error_information);
+            return ImgDoc2_ErrorCode_InvalidArgument;
+        }
+    }
+
     const libCZI::PixelType libczi_pixel_type = ConvertToLibCziPixelType(bitmap_info->pixelType);
     if (libczi_pixel_type == libCZI::PixelType::Invalid)
     {
@@ -97,16 +106,30 @@ ImgDoc2ErrorCode DecodeImageJpgXr(
 
     const auto decoder = libCZI::GetDefaultSiteObject(libCZI::SiteObjectType::Default)->GetDecoder(ImageDecoderType::JPXR_JxrLib, nullptr);
 
-    auto decoded_bitmap = decoder->Decode(compressed_data, compressed_data_size, libczi_pixel_type, bitmap_info->pixelWidth, bitmap_info->pixelHeight);
+    std::shared_ptr<libCZI::IBitmapData> decoded_bitmap;
+    try
+    {
+        decoded_bitmap = decoder->Decode(compressed_data, compressed_data_size, libczi_pixel_type, bitmap_info->pixelWidth, bitmap_info->pixelHeight);
+    }
+    catch (const std::exception& e)
+    {
+        ImgDoc2ApiSupport::FillOutErrorInformation(e, error_information);
+        return ImgDoc2_ErrorCode_UnspecifiedError;
+    }
 
-    ScopedBitmapLockerSP decoder_bitmap_locker(decoded_bitmap);
+    const ScopedBitmapLockerSP decoder_bitmap_locker(decoded_bitmap);
 
     // the stride for the decoded image is either the one we happen to get from the decoder (in the case that no stride was passed in) or the one that was passed in
     result->stride = destination_stride == 0 ? decoder_bitmap_locker.stride : destination_stride;
 
-    uint64_t required_size = static_cast<uint64_t>(result->stride) * bitmap_info->pixelHeight;
+    const uint64_t required_size = static_cast<uint64_t>(result->stride) * bitmap_info->pixelHeight;
 
     const bool success = allocate_memory_function(required_size, &result->bitmap);
+    if (!success)
+    {
+        ImgDoc2ApiSupport::FillOutErrorInformationForAllocationFailure(required_size, error_information);
+        return ImgDoc2_ErrorCode_AllocationError;
+    })
 
     CopyWithStrideConversion(
         decoder_bitmap_locker.ptrDataRoi,
