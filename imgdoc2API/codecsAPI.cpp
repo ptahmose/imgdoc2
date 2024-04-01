@@ -129,7 +129,7 @@ ImgDoc2ErrorCode DecodeImageJpgXr(
     {
         ImgDoc2ApiSupport::FillOutErrorInformationForAllocationFailure(required_size, error_information);
         return ImgDoc2_ErrorCode_AllocationError;
-    })
+    }
 
     CopyWithStrideConversion(
         decoder_bitmap_locker.ptrDataRoi,
