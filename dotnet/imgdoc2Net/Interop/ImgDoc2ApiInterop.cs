@@ -1598,7 +1598,7 @@ namespace ImgDoc2Net.Interop
 
     internal partial class ImgDoc2ApiInterop
     {
-        public Memory<byte> DecodeJpgXr(Span<byte> compressedData, PixelType pixelType, int width, int height)
+        public (Memory<byte>, int) DecodeJpgXr(Span<byte> compressedData, PixelType pixelType, int width, int height, int stride = -1)
         {
             this.ThrowIfNotInitialized();
 
@@ -1618,7 +1618,7 @@ namespace ImgDoc2Net.Interop
                         &bitmapInfoInterop,
                         new IntPtr(pointerToCompressedData),
                         (ulong)compressedData.Length,
-                        0,
+                        stride <= 0 ? 0 : (uint)stride,
                         this.funcPtrAllocateMemoryByteArray,
                         &result,
                         &errorInformation);
@@ -1629,7 +1629,7 @@ namespace ImgDoc2Net.Interop
                     }
                 }
 
-                return ImgDoc2ApiInterop.ConvertAllocationObjectToByteArrayAndFreeGcHandle(ref result.Bitmap);
+                return (ImgDoc2ApiInterop.ConvertAllocationObjectToByteArrayAndFreeGcHandle(ref result.Bitmap), (int)result.Stride);
             }
         }
     }
