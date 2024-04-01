@@ -2,7 +2,7 @@
   "profiles": {
     "imgdoc2cmd": {
       "commandName": "Project",
-      "commandLineArgs": " -c CreateSyntheticDocument -b C0 -t 1024x1024 -r 40x40 --tiles-overlap 100px -o n:\\out/test.db",
+      "commandLineArgs": "-c QueryForTilesAndSaveTiles -s J:\\libczi\\Example_TMA1_Zeb1_SPRR2_Ck19_S100-1-1-1-1.db -d H:\\TEMP\\imgdoc2cmd\\imagesharp -q \"S0,0C1,1\"",
       "nativeDebugging": true
     }
   }

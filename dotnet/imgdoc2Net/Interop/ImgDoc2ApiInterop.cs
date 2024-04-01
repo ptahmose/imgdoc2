@@ -196,12 +196,13 @@ namespace ImgDoc2Net.Interop
                 this.decodeImage =
                     this.GetProcAddressThrowIfNotFound<DecodeImageDelegate>("DecodeImage");
 
+                // Note: make sure that the delegates used below are not (i.e. NEVER) garbage-collected, otherwise the native code will crash
                 this.funcPtrBlobOutputSetSizeForwarder =
                     Marshal.GetFunctionPointerForDelegate<BlobOutputSetSizeDelegate>(ImgDoc2ApiInterop.BlobOutputSetSizeDelegateObj);
                 this.funcPtrBlobOutputSetDataForwarder =
                     Marshal.GetFunctionPointerForDelegate<BlobOutputSetDataDelegate>(ImgDoc2ApiInterop.BlobOutputSetDataDelegateObj);
                 this.funcPtrAllocateMemoryByteArray =
-                    Marshal.GetFunctionPointerForDelegate<AllocateMemoryDelegate>(ImgDoc2ApiInterop.AllocateMemoryFunctionByteArray);
+                    Marshal.GetFunctionPointerForDelegate<AllocateMemoryDelegate>(ImgDoc2ApiInterop.AllocateMemoryByteArrayDelegateObj);
 
                 this.InitializeEnvironmentObject();
             }
@@ -1747,6 +1748,13 @@ namespace ImgDoc2Net.Interop
         /// </summary>
         private static readonly BlobOutputSetDataDelegate BlobOutputSetDataDelegateObj =
             ImgDoc2ApiInterop.BlobOutputSetDataFunction;
+
+        /// <summary>
+        /// Delegate to the (static) AllocateMemoryFunctionByteArray-function. It is important that this delegate does NOT get
+        /// GCed (which is ensured in case of a static variable of course).
+        /// </summary>
+        private static readonly AllocateMemoryDelegate AllocateMemoryByteArrayDelegateObj =
+            ImgDoc2ApiInterop.AllocateMemoryFunctionByteArray;
 
         /// <summary>
         /// Function pointer (callable from unmanaged code) to the function "BlobOutputSetSizeFunction".
