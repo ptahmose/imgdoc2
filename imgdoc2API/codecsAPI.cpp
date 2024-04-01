@@ -113,7 +113,7 @@ ImgDoc2ErrorCode DecodeImage(
 
     switch (data_type)
     {
-        case imgdoc2::DataTypes::JPGXRCOMPRESSED_BITMAP:
+        case static_cast<std::underlying_type_t<imgdoc2::DataTypes>>(imgdoc2::DataTypes::JPGXRCOMPRESSED_BITMAP):
             try
             {
                 const auto decoder = libCZI::GetDefaultSiteObject(libCZI::SiteObjectType::Default)->GetDecoder(ImageDecoderType::JPXR_JxrLib, nullptr);
@@ -126,7 +126,7 @@ ImgDoc2ErrorCode DecodeImage(
             }
 
             break;
-        case imgdoc2::DataTypes::ZSTD0COMPRESSED_BITMAP:
+        case static_cast<std::underlying_type_t<imgdoc2::DataTypes>>(imgdoc2::DataTypes::ZSTD0COMPRESSED_BITMAP):
             try
             {
                 const auto decoder = libCZI::GetDefaultSiteObject(libCZI::SiteObjectType::Default)->GetDecoder(ImageDecoderType::ZStd0, nullptr);
@@ -139,7 +139,7 @@ ImgDoc2ErrorCode DecodeImage(
             }
 
             break;
-        case imgdoc2::DataTypes::ZSTD1COMPRESSED_BITMAP:
+        case static_cast<std::underlying_type_t<imgdoc2::DataTypes>>(imgdoc2::DataTypes::ZSTD1COMPRESSED_BITMAP):
             try
             {
                 const auto decoder = libCZI::GetDefaultSiteObject(libCZI::SiteObjectType::Default)->GetDecoder(ImageDecoderType::ZStd1, nullptr);
