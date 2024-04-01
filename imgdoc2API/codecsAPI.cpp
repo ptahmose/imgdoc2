@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2024 Carl Zeiss Microscopy GmbH
+//
+// SPDX-License-Identifier: MIT
+
 #include "codecsAPI.h"
 #include <libCZI.h>
 #include "imgdoc2APIsupport.h"
@@ -43,8 +47,9 @@ namespace
     }
 }
 
-ImgDoc2ErrorCode DecodeImageJpgXr(
+ImgDoc2ErrorCode DecodeImage(
                 const BitmapInfoInterop* bitmap_info,
+                std::uint8_t data_type,
                 const void* compressed_data,
                 std::uint64_t compressed_data_size,
                 std::uint32_t destination_stride,
@@ -104,17 +109,52 @@ ImgDoc2ErrorCode DecodeImageJpgXr(
         return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
-    const auto decoder = libCZI::GetDefaultSiteObject(libCZI::SiteObjectType::Default)->GetDecoder(ImageDecoderType::JPXR_JxrLib, nullptr);
-
     std::shared_ptr<libCZI::IBitmapData> decoded_bitmap;
-    try
+
+    switch (data_type)
     {
-        decoded_bitmap = decoder->Decode(compressed_data, compressed_data_size, libczi_pixel_type, bitmap_info->pixelWidth, bitmap_info->pixelHeight);
-    }
-    catch (const std::exception& e)
-    {
-        ImgDoc2ApiSupport::FillOutErrorInformation(e, error_information);
-        return ImgDoc2_ErrorCode_UnspecifiedError;
+        case imgdoc2::DataTypes::JPGXRCOMPRESSED_BITMAP:
+            try
+            {
+                const auto decoder = libCZI::GetDefaultSiteObject(libCZI::SiteObjectType::Default)->GetDecoder(ImageDecoderType::JPXR_JxrLib, nullptr);
+                decoded_bitmap = decoder->Decode(compressed_data, compressed_data_size, libczi_pixel_type, bitmap_info->pixelWidth, bitmap_info->pixelHeight);
+            }
+            catch (const std::exception& e)
+            {
+                ImgDoc2ApiSupport::FillOutErrorInformation(e, error_information);
+                return ImgDoc2_ErrorCode_UnspecifiedError;
+            }
+
+            break;
+        case imgdoc2::DataTypes::ZSTD0COMPRESSED_BITMAP:
+            try
+            {
+                const auto decoder = libCZI::GetDefaultSiteObject(libCZI::SiteObjectType::Default)->GetDecoder(ImageDecoderType::ZStd0, nullptr);
+                decoded_bitmap = decoder->Decode(compressed_data, compressed_data_size, libczi_pixel_type, bitmap_info->pixelWidth, bitmap_info->pixelHeight);
+            }
+            catch (const std::exception& e)
+            {
+                ImgDoc2ApiSupport::FillOutErrorInformation(e, error_information);
+                return ImgDoc2_ErrorCode_UnspecifiedError;
+            }
+
+            break;
+        case imgdoc2::DataTypes::ZSTD1COMPRESSED_BITMAP:
+            try
+            {
+                const auto decoder = libCZI::GetDefaultSiteObject(libCZI::SiteObjectType::Default)->GetDecoder(ImageDecoderType::ZStd1, nullptr);
+                decoded_bitmap = decoder->Decode(compressed_data, compressed_data_size, libczi_pixel_type, bitmap_info->pixelWidth, bitmap_info->pixelHeight);
+            }
+            catch (const std::exception& e)
+            {
+                ImgDoc2ApiSupport::FillOutErrorInformation(e, error_information);
+                return ImgDoc2_ErrorCode_UnspecifiedError;
+            }
+
+            break;
+        default:
+            ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("data_type", "is not supported", error_information);
+            return ImgDoc2_ErrorCode_InvalidArgument;
     }
 
     const ScopedBitmapLockerSP decoder_bitmap_locker(decoded_bitmap);

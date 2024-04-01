@@ -193,8 +193,8 @@ namespace ImgDoc2Net.Interop
                 this.getVersionInfo =
                     this.GetProcAddressThrowIfNotFound<GetVersionInfoDelegate>("GetVersionInfo");
 
-                this.decodeImageJpgXr =
-                    this.GetProcAddressThrowIfNotFound<DecodeImageJpgXrDelegate>("DecodeImageJpgXr");
+                this.decodeImage =
+                    this.GetProcAddressThrowIfNotFound<DecodeImageDelegate>("DecodeImage");
 
                 this.funcPtrBlobOutputSetSizeForwarder =
                     Marshal.GetFunctionPointerForDelegate<BlobOutputSetSizeDelegate>(ImgDoc2ApiInterop.BlobOutputSetSizeDelegateObj);
@@ -1600,6 +1600,21 @@ namespace ImgDoc2Net.Interop
     {
         public (Memory<byte>, int) DecodeJpgXr(Span<byte> compressedData, PixelType pixelType, int width, int height, int stride = -1)
         {
+            return this.Decode(compressedData, DataType.JpgXrCompressedBitmap, pixelType, width, height, stride);
+        }
+
+        public (Memory<byte>, int) DecodeZstd0(Span<byte> compressedData, PixelType pixelType, int width, int height, int stride = -1)
+        {
+            return this.Decode(compressedData, DataType.Zstd0CcompressedBitmap, pixelType, width, height, stride);
+        }
+
+        public (Memory<byte>, int) DecodeZstd1(Span<byte> compressedData, PixelType pixelType, int width, int height, int stride = -1)
+        {
+            return this.Decode(compressedData, DataType.Zstd1CcompressedBitmap, pixelType, width, height, stride);
+        }
+
+        public (Memory<byte>, int) Decode(Span<byte> compressedData, DataType dataType, PixelType pixelType, int width, int height, int stride = -1)
+        {
             this.ThrowIfNotInitialized();
 
             unsafe
@@ -1614,8 +1629,9 @@ namespace ImgDoc2Net.Interop
 
                 fixed (byte* pointerToCompressedData = compressedData)
                 {
-                    int returnCode = this.decodeImageJpgXr(
+                    int returnCode = this.decodeImage(
                         &bitmapInfoInterop,
+                        (byte)dataType,
                         new IntPtr(pointerToCompressedData),
                         (ulong)compressedData.Length,
                         stride <= 0 ? 0 : (uint)stride,
@@ -2031,7 +2047,7 @@ namespace ImgDoc2Net.Interop
 
         private readonly GetVersionInfoDelegate getVersionInfo;
 
-        private readonly DecodeImageJpgXrDelegate decodeImageJpgXr;
+        private readonly DecodeImageDelegate decodeImage;
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         private unsafe delegate void GetStatisticsDelegate(ImgDoc2StatisticsInterop* statisticsInterop);
@@ -2275,8 +2291,9 @@ namespace ImgDoc2Net.Interop
             ImgDoc2ErrorInformation* errorInformation);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        private unsafe delegate int DecodeImageJpgXrDelegate(
+        private unsafe delegate int DecodeImageDelegate(
             BitmapInfoInterop* bitmapInfoInterop,
+            byte dataType,
             IntPtr pointerToCompressedData,
             ulong sizeOfCompressedData,
             uint destinationStride,
