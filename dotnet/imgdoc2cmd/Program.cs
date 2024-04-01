@@ -10,8 +10,6 @@ namespace Imgdoc2cmd
     {
         static int Main(string[] args)
         {
-            var versionInfo = ImgDoc2Global.GetVersionInfo();
-
             Options options = new Options();
 
             try
