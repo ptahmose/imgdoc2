@@ -93,7 +93,7 @@ namespace ImgDoc2Net_UnitTests
                 }
 
                 // Finalize the hash calculation.
-                md5.TransformFinalBlock(new byte[0], 0, 0);
+                md5.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
 
                 // Return the computed hash.
                 var hash = md5.Hash ?? throw new InvalidOperationException("The hash is null.");
