@@ -155,22 +155,18 @@ if(NOT GCOV_PATH)
     message(FATAL_ERROR "gcov not found! Aborting...")
 endif() # NOT GCOV_PATH
 
-#get_cmake_property(_variableNames VARIABLES)
-#list (SORT _variableNames)
-#foreach (_variableName ${_variableNames})
-#    message(STATUS "${_variableName}=${${_variableName}}")
-#endforeach()
-
 # Check supported compiler (Clang, GNU and Flang)
 get_property(LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
 foreach(LANG ${LANGUAGES})
-  if("${CMAKE_${LANG}_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang")
-    if("${CMAKE_${LANG}_COMPILER_VERSION}" VERSION_LESS 3)
-      message(FATAL_ERROR "Clang version must be 3.0.0 or greater! Aborting...")
+  if (NOT ${LANG} MATCHES "ASM")    # skip ASM, as there seems not to exist a compiler ID for it
+    if("${CMAKE_${LANG}_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang")
+      if("${CMAKE_${LANG}_COMPILER_VERSION}" VERSION_LESS 3)
+        message(FATAL_ERROR "Clang version must be 3.0.0 or greater! Aborting...")
+      endif()
+    elseif(NOT "${CMAKE_${LANG}_COMPILER_ID}" MATCHES "GNU"
+           AND NOT "${CMAKE_${LANG}_COMPILER_ID}" MATCHES "(LLVM)?[Ff]lang")
+      message(FATAL_ERROR "### LANG=${LANG} -> Compiler ${CMAKE_${LANG}_COMPILER_ID} is not GNU or Flang! Aborting...")
     endif()
-  elseif(NOT "${CMAKE_${LANG}_COMPILER_ID}" MATCHES "GNU"
-         AND NOT "${CMAKE_${LANG}_COMPILER_ID}" MATCHES "(LLVM)?[Ff]lang")
-    message(FATAL_ERROR "### LANG=${LANG} -> Compiler ${CMAKE_${LANG}_COMPILER_ID} is not GNU or Flang! Aborting...")
   endif()
 endforeach()
 
