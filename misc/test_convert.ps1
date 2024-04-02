@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2024 Carl Zeiss Microscopy GmbH
+#
+# SPDX-License-Identifier: MIT
+
 # Define the path to the executable
 $executablePath = "D:\dev\MyGitHub\ptahmose_imgdoc2\out\build\x64-Debug\convczi\convczi.exe"
 
