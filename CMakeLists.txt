@@ -15,6 +15,11 @@ include(FetchContent)
 project("imgdoc2"
           VERSION 0.0.1)
 
+get_property(LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
+foreach(LANG ${LANGUAGES})
+  message(STATUS "********* LANG=${LANG}")
+endforeach()
+
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 set(CMAKE_CXX_STANDARD 17)
