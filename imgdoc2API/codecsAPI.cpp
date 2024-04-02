@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "codecsAPI.h"
+#include <memory>
 #include <libCZI.h>
 #include "imgdoc2APIsupport.h"
 
