@@ -48,11 +48,11 @@ jobs:
 
       - name: Build .NET code
         working-directory: ${{github.workspace}}/dotnet
-        run: dotnet build /p:EnableWindowsTargeting=true
+        run: dotnet build
 
       - name: Run .NET tests
         working-directory: ${{github.workspace}}/dotnet
-        run: dotnet test --collect:"XPlat Code Coverage" --results-directory ${{github.workspace}}/coverage_imgdoc2net /p:EnableWindowsTargeting=true
+        run: dotnet test --collect:"XPlat Code Coverage" --results-directory ${{github.workspace}}/coverage_imgdoc2net
 
       - name: code-coverage
         run: |
