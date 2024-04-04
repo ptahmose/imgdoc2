@@ -137,6 +137,7 @@ jobs:
           mkdir ${{github.workspace}}/imgdoc2API-binaries
           cd ${{github.workspace}}/imgdoc2API-binaries
           cp ${{github.workspace}}/dotnet/native_dlls/imgdoc2API.dll .
+          cp ${{github.workspace}}/dotnet/imgdoc2Net/bin/Release/netstandard2.0/ImgDoc2Net.dll .
 
       - name: Upload Windows-x64 Binaries
         uses: actions/upload-artifact@v2
