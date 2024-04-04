@@ -158,7 +158,7 @@ jobs:
       - name: Test
         run: |
           #ls -l --recursive binaries/
-          # we organize the native binaries in a way that they can be packed into a NuGet package. We follow this convention for the folder structure:
+          # We organize the native binaries in a way that they can be packed into a NuGet package. We follow this convention for the folder structure:
           # runtimes/<RID>/native, where <RID> is the Runtime Identifier for the target platform.
           mkdir nuget-packaging
           mkdir -p nuget-packaging/runtimes/linux-x64/native
@@ -172,4 +172,4 @@ jobs:
           nuget pack imgdoc2.nuspec
           echo "NuGet package created."
           ls -l
-          nuget push imgdoc2.nupkg -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
+          nuget push "*.nupkg" -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
