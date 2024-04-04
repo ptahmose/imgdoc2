@@ -57,7 +57,10 @@ jobs:
         run: |
           imgdoc2_version_number=$(cat ../VersionNumber.txt)
           # TODO(JBL): if adding "--configuration ${{env.BUILD_TYPE}}" (=Release) to the dotnet build command, the build fails. Investigate why.
-          dotnet build  -p:Version=$imgdoc2_version_number
+
+          # note: the version number we read from "VersionNumber.txt" is of the form "Major.Minor.Build" (following semantic versioning). 
+          # We append ".0" to it to make it a valid version number .NET assembly (which traditionally follows a format "Major.Minor.Build.Revision").
+          dotnet build  -p:Version=$imgdoc2_version_number.0
 
       - name: Run .NET tests
         working-directory: ${{github.workspace}}/dotnet
@@ -132,7 +135,9 @@ jobs:
         working-directory: ${{github.workspace}}/dotnet
         run: |
           imgdoc2_version_number=$(cat ../VersionNumber.txt)
-          dotnet build --configuration ${{env.BUILD_TYPE}} -p:Version=$imgdoc2_version_number
+          # note: the version number we read from "VersionNumber.txt" is of the form "Major.Minor.Build" (following semantic versioning). 
+          # We append ".0" to it to make it a valid version number .NET assembly (which traditionally follows a format "Major.Minor.Build.Revision").
+          dotnet build --configuration ${{env.BUILD_TYPE}} -p:Version=$imgdoc2_version_number.0
 
       - name: Run .NET tests
         working-directory: ${{github.workspace}}/dotnet
@@ -178,6 +183,8 @@ jobs:
           # Use sed to replace $version$ with the content of imgdoc2_version_number variable
           imgdoc2_version_number=$(cat ${{github.workspace}}/VersionNumber.txt)
           sed -i 's/\$version\$/'"$imgdoc2_version_number/g" nuget-packaging/imgdoc2.nuspec
+          imgdoc2_icon_for_nuget=${{github.workspace}}/libimgdoc2/doc/images/logo_55x55.png
+          sed -i 's/\$icon\$/'"$imgdoc2_icon_for_nuget/g" nuget-packaging/imgdoc2.nuspec
 
           #ls -l --recursive nuget-packaging/
           cd nuget-packaging

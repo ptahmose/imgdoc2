@@ -8,19 +8,23 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <AssemblyTitle>Your Package Name</AssemblyTitle>
-        <AssemblyDescription>This is a great package that does many things.</AssemblyDescription>
-        <Company>YourCompany</Company>
-        <Authors>YourAuthorName</Authors>
-        <Copyright>Copyright 2024 YourCompany</Copyright>
+        <AssemblyTitle>imgdoc2Net</AssemblyTitle>
+        <AssemblyDescription>Experimental Data Management for Multi-Dimensional and Tiled 2D- and 3D-Images.</AssemblyDescription>
+        <Product>imgdoc2</Product>
+        <Company>Carl Zeiss Microscopy GmbH</Company>
+        <Copyright>Copyright 2023-2024 Carl Zeiss Microscopy GmbH</Copyright>
+        <!-- Note: version number is passed to msbuild ("-p:Version=...") and goes into the assembly's
+                   attributes AssemblyVersion, FileVersion and AssemblyInformationalVersion -->
     </PropertyGroup>
 
+    <!-- This has the following purpose: If native DLLs are present in the folder "native_dlls" next to the project file,
+         then they are copied to the output-folder. The idea is that with local development, the unmanaged project
+         will drop its artifacts in this folder, which are then picked up by a build of the managed project. -->
     <ItemGroup Condition="Exists('..\native_dlls\imgdoc2API.dll')">
         <None Include="..\native_dlls\imgdoc2API.dll" Link="imgdoc2API.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
-
     <ItemGroup Condition="Exists('..\native_dlls\libimgdoc2API.so')">
         <None Include="..\native_dlls\libimgdoc2API.so" Link="libimgdoc2API.so">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
