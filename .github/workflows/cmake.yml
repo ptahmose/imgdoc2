@@ -184,7 +184,7 @@ jobs:
           imgdoc2_version_number=$(cat ${{github.workspace}}/VersionNumber.txt)
           sed -i 's/\$version\$/'"$imgdoc2_version_number/g" nuget-packaging/imgdoc2.nuspec
           imgdoc2_icon_for_nuget=${{github.workspace}}/libimgdoc2/doc/images/logo_55x55.png
-          sed -i 's/\$icon\$/'"$imgdoc2_icon_for_nuget/g" nuget-packaging/imgdoc2.nuspec
+          sed -i 's|\$icon\$|'"$imgdoc2_icon_for_nuget"'|g' nuget-packaging/imgdoc2.nuspec
 
           #ls -l --recursive nuget-packaging/
           cd nuget-packaging
