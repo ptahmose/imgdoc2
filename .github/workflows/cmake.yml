@@ -177,7 +177,7 @@ jobs:
 
           # Use sed to replace $version$ with the content of imgdoc2_version_number variable
           imgdoc2_version_number=$(cat ${{github.workspace}}/VersionNumber.txt)
-          sed -i "s/\$version\$/$newVersion/g" "$file"
+          sed -i "s/\$version\$/imgdoc2_version_number/g" "$file"
 
           #ls -l --recursive nuget-packaging/
           cd nuget-packaging
