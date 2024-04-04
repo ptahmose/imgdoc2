@@ -2,7 +2,7 @@
 <package >
     <metadata>
         <id>imgdoc2</id>
-        <version>1.0.2</version>
+        <version>0.0.1</version>
         <authors>ZEISS</authors>
         <owners>J. Bohl</owners>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -10,7 +10,8 @@
         <releaseNotes>Initial release.</releaseNotes>
     </metadata>
     <files>
-        <file src="./bin/Release/netstandard2.0/ImgDoc2Net.dll" target="lib/netstandard2.0/" />
-        <file src="./bin/Release/netstandard2.0/imgdoc2API.dll" target="runtimes/win-x64/native/" />
+        <file src="./ImgDoc2Net.dll" target="lib/netstandard2.0/" />
+        <file src="./runtimes/linux-x64/native/libimgdoc2API.so" target="runtimes/linux-x64/native/" />
+        <file src="./runtimes/win-x64/native/imgdoc2API.dll" target="runtimes/win-x64/native/" />
     </files>
 </package>
