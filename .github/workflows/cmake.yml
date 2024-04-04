@@ -156,3 +156,13 @@ jobs:
       - name: Test
         run: |
           ls -l --recursive binaries/
+          # we organize the native binaries in a way that they can be packed into a NuGet package. We follow this convention for folder structure:
+          # runtimes/<RID>/native, where <RID> is the Runtime Identifier for the target platform.
+          mkdir nuget-packaging
+          mkdir nuget-packaging/runtimes
+          mkdir -p nuget-packaging/runtimes/linux-x64/native
+          mkdir -p nuget-packaging/runtimes/win-x64/native
+          cp binaries/imgdoc2API-linux-x64-binaries/libimgdoc2API.so nuget-packaging/runtimes/linux-x64/native/
+          cp binaries/imgdoc2API-windows-x64-binaries/imgdoc2API.dll nuget-packaging/runtimes/win-x64/native/
+          cp binaries/imgdoc2API-windows-x64-binaries/ImgDoc2Net.dll nuget-packaging/
+          ls -l --recursive nuget-packaging/
