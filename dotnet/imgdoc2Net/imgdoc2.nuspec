@@ -10,7 +10,8 @@
         <releaseNotes>Initial release.</releaseNotes>
         <dependencies>
             <group targetFramework=".NETStandard2.0">
-                <dependency id="System.Memory" version="4.5.5" />   # This is a dependency of ImgDoc2Net, we want >= 4.5.5
+                <!-- This is a dependency of ImgDoc2Net, we want >= 4.5.5 -->
+                <dependency id="System.Memory" version="4.5.5" />
             </group>
         </dependencies>
     </metadata>
