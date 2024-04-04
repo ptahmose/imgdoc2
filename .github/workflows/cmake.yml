@@ -164,7 +164,7 @@ jobs:
           cp binaries/imgdoc2API-linux-x64-binaries/libimgdoc2API.so nuget-packaging/runtimes/linux-x64/native/
           cp binaries/imgdoc2API-windows-x64-binaries/imgdoc2API.dll nuget-packaging/runtimes/win-x64/native/
           cp binaries/imgdoc2API-windows-x64-binaries/ImgDoc2Net.dll nuget-packaging/
-          cp ${{github.workspace}}/dotnet/ImgDoc2Net/imgdoc2.nuspec nuget-packaging/
+          cp ${{github.workspace}}/dotnet/imgdoc2Net/imgdoc2.nuspec nuget-packaging/
           #ls -l --recursive nuget-packaging/
           cd nuget-packaging
           nuget pack imgdoc2.nuspec
