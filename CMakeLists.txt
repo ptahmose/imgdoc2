@@ -12,8 +12,10 @@ cmake_policy(SET CMP0079 NEW) # necessary to make coverage build work, not sure 
 
 include(FetchContent)
 
+file (STRINGS "VersionNumber.txt" IMGDOC2_VERSION_NUMBER)
+
 project("imgdoc2"
-          VERSION 0.0.1)
+          VERSION ${IMGDOC2_VERSION_NUMBER})
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 

@@ -9,9 +9,13 @@ namespace ImgDoc2Net.Interfaces
     public struct BitmapData
     {
         public int Width { get; set; }
+
         public int Height { get; set; }
+
         public int Stride { get; set; }
+
         public PixelType PixelType { get; set; }
+
         public Memory<byte> Data { get; set; }
     }
 }

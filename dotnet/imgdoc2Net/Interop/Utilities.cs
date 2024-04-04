@@ -21,7 +21,6 @@ namespace ImgDoc2Net.Interop
             return (p == 4) || (p == 6) || (p == 128);
         }
 
-
         /// <brief> 
         /// Convert a UTF-8 string (given as a span of bytes) into a .NET string.
         /// </brief>

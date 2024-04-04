@@ -2,12 +2,14 @@
 <package >
     <metadata>
         <id>test-imgdoc2</id>
-        <version>0.0.2</version>
+        <version>$version$</version>
         <authors>ZEISS</authors>
         <owners>J. Bohl</owners>
+        <license type="expression">MIT</license>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>A short description</description>
         <releaseNotes>Initial release.</releaseNotes>
+        <projectUrl>http://project_url_here_or_delete_this_line/</projectUrl>
         <dependencies>
             <group targetFramework=".NETStandard2.0">
                 <!-- This is a dependency of ImgDoc2Net, we want >= 4.5.5 -->

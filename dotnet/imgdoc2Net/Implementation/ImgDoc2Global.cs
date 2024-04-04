@@ -2,10 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
-using System;
-
 namespace ImgDoc2Net.Implementation
 {
+    using System;
     using ImgDoc2Net.Interfaces;
     using ImgDoc2Net.Interop;
 

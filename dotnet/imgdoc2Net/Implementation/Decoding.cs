@@ -12,8 +12,7 @@ namespace ImgDoc2Net.Implementation
 
     internal class Decoding : IDecoding
     {
-        public BitmapData Decode(Span<byte> compressedData, DataType dataType, PixelType pixelType, int width,
-            int height, int stride = -1)
+        public BitmapData Decode(Span<byte> compressedData, DataType dataType, PixelType pixelType, int width, int height, int stride = -1)
         {
             var (data, strideOfData) = ImgDoc2ApiInterop.Instance.Decode(compressedData, dataType, pixelType, width, height, stride);
             return new BitmapData()
@@ -27,4 +26,3 @@ namespace ImgDoc2Net.Implementation
         }
     }
 }
-
