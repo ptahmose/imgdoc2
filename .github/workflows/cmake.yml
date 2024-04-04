@@ -155,7 +155,7 @@ jobs:
           path: binaries/
       - name: Test
         run: |
-          ls -l --recursive binaries/
+          #ls -l --recursive binaries/
           # we organize the native binaries in a way that they can be packed into a NuGet package. We follow this convention for the folder structure:
           # runtimes/<RID>/native, where <RID> is the Runtime Identifier for the target platform.
           mkdir nuget-packaging
@@ -164,8 +164,8 @@ jobs:
           cp binaries/imgdoc2API-linux-x64-binaries/libimgdoc2API.so nuget-packaging/runtimes/linux-x64/native/
           cp binaries/imgdoc2API-windows-x64-binaries/imgdoc2API.dll nuget-packaging/runtimes/win-x64/native/
           cp binaries/imgdoc2API-windows-x64-binaries/ImgDoc2Net.dll nuget-packaging/
-          cp ${{github.workspace}}/dotnet/imgdoc2Net/imgdoc2.nuspec nuget-packaging/
-          ls -l --recursive nuget-packaging/
+          cp ${{github.workspace}}/dotnet/ImgDoc2Net/imgdoc2.nuspec nuget-packaging/
+          #ls -l --recursive nuget-packaging/
           cd nuget-packaging
           nuget pack imgdoc2.nuspec
           echo "NuGet package created."
