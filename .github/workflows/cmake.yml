@@ -136,8 +136,10 @@ jobs:
         run: |
           mkdir ${{github.workspace}}/imgdoc2API-binaries
           cd ${{github.workspace}}/imgdoc2API-binaries
+          # we put the win-x64 native DLL, the .NET DLL and the .nuspec file into the same folder for packaging
           cp ${{github.workspace}}/dotnet/native_dlls/imgdoc2API.dll .
           cp ${{github.workspace}}/dotnet/imgdoc2Net/bin/Release/netstandard2.0/ImgDoc2Net.dll .
+          cp ${{github.workspace}}/dotnet/imgdoc2Net/imgdoc2.nuspec .
 
       - name: Upload Windows-x64 Binaries
         uses: actions/upload-artifact@v2
@@ -164,7 +166,7 @@ jobs:
           cp binaries/imgdoc2API-linux-x64-binaries/libimgdoc2API.so nuget-packaging/runtimes/linux-x64/native/
           cp binaries/imgdoc2API-windows-x64-binaries/imgdoc2API.dll nuget-packaging/runtimes/win-x64/native/
           cp binaries/imgdoc2API-windows-x64-binaries/ImgDoc2Net.dll nuget-packaging/
-          cp ${{github.workspace}}/dotnet/imgdoc2Net/imgdoc2.nuspec nuget-packaging/
+          cp binaries/imgdoc2.nuspec nuget-packaging/
           #ls -l --recursive nuget-packaging/
           cd nuget-packaging
           nuget pack imgdoc2.nuspec
