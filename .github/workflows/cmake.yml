@@ -172,4 +172,4 @@ jobs:
           nuget pack imgdoc2.nuspec
           echo "NuGet package created."
           ls -l
-          nuget imgdoc2.nupkg -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
+          nuget push imgdoc2.nupkg -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
