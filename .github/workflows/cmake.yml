@@ -56,7 +56,8 @@ jobs:
         working-directory: ${{github.workspace}}/dotnet
         run: |
           imgdoc2_version_number=$(cat ../VersionNumber.txt)
-          dotnet build --configuration ${{env.BUILD_TYPE}} -p:Version=$imgdoc2_version_number
+          # TODO(JBL): if adding "--configuration ${{env.BUILD_TYPE}}" (=Release) to the dotnet build command, the build fails. Investigate why.
+          dotnet build  -p:Version=$imgdoc2_version_number
 
       - name: Run .NET tests
         working-directory: ${{github.workspace}}/dotnet
