@@ -183,6 +183,19 @@ jobs:
       - name: Build C++
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+      - name: prepare imgdoc2API-binaries
+        run: |
+          mkdir ${{github.workspace}}/imgdoc2API-binaries
+          cd ${{github.workspace}}/imgdoc2API-binaries
+          cp ${{github.workspace}}/build/imgdoc2API/Release/imgdoc2API.dll .
+
+      - name: Upload Windows-arm64 Binaries
+        uses: actions/upload-artifact@v2
+        with:
+          name: imgdoc2API-windows-arm64-binaries
+          path: ${{github.workspace}}/imgdoc2API-binaries
+
+
   package:
     needs: [build-windows-x64, build-linux, build-windows-arm64]
     runs-on: ubuntu-latest
@@ -202,6 +215,7 @@ jobs:
           mkdir -p nuget-packaging/runtimes/win-x64/native
           cp binaries/imgdoc2API-linux-x64-binaries/libimgdoc2API.so nuget-packaging/runtimes/linux-x64/native/
           cp binaries/imgdoc2API-windows-x64-binaries/imgdoc2API.dll nuget-packaging/runtimes/win-x64/native/
+          cp binaries/imgdoc2API-windows-arm64-binaries/imgdoc2API.dll nuget-packaging/runtimes/win-arm64/native/
           cp binaries/imgdoc2API-windows-x64-binaries/ImgDoc2Net.dll nuget-packaging/
           cp ${{github.workspace}}/dotnet/imgdoc2Net/imgdoc2.nuspec nuget-packaging/
 
