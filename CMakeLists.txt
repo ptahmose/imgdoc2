@@ -42,6 +42,10 @@ option(IMGDOC2_BUILD_NATIVEIMGDOC2CMD "Whether to build the native imgdoc2cmd-to
 
 option(IMGDOC2_BUILD_UNITTESTS "Whether to build the unit-tests" ON)
 
+# this option is only relevant if IMGDOC2_BUILD_UNITTESTS is ON, and it controls whether the unit-tests are run (for unit-test discovery) after building.
+# This is problematic when cross-compiling. In that case, the unit-tests should be run on the target system.
+option(IMGDOC2_RUNDISCOVER_UNITTESTS "Whether to run the unit-tests after building" ON)
+
 
 if (IMGDOC2_BUILD_CLANGTIDY)
   # How "clang-tidy" organization works (if this option is enable here):
