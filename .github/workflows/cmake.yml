@@ -189,7 +189,10 @@ jobs:
           cp ${{github.workspace}}/libimgdoc2/doc/images/logo_55x55.png nuget-packaging/images/icon.png
           sed -i 's|\$icon\$|'"images/icon.png"'|g' nuget-packaging/imgdoc2.nuspec
 
-          #ls -l --recursive nuget-packaging/
+          ls -l --recursive nuget-packaging/
+          echo "-----------------------------------------------------------"
+          cat imgdoc2.nuspec
+
           cd nuget-packaging
           nuget pack imgdoc2.nuspec
           echo "NuGet package created."
