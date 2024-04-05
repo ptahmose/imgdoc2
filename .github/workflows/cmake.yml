@@ -182,9 +182,9 @@ jobs:
 
           # Use sed to replace $version$ with the content of imgdoc2_nuget_version_number variable
           imgdoc2_nuget_version_number=$(cat ${{github.workspace}}/VersionNumber.txt)
-          imgdoc2_nuget_version_number += "-alpha"
-          imgdoc2_nuget_version_number += "+"
-          imgdoc2_nuget_version_number += $(git rev-parse HEAD)
+          imgdoc2_nuget_version_number+="-alpha"
+          imgdoc2_nuget_version_number+="+"
+          imgdoc2_nuget_version_number+=$(git rev-parse HEAD)
           echo "imgdoc2_nuget_version_number: $imgdoc2_nuget_version_number"
           sed -i 's/\$version\$/'"$imgdoc2_nuget_version_number/g" nuget-packaging/imgdoc2.nuspec
 
@@ -192,6 +192,9 @@ jobs:
           mkdir -p nuget-packaging/images
           cp ${{github.workspace}}/libimgdoc2/doc/images/logo_55x55.png nuget-packaging/images/icon.png
           sed -i 's|\$icon\$|'"images/icon.png"'|g' nuget-packaging/imgdoc2.nuspec
+
+          mkdir -p nuget-packaging/docs
+          cp ${{github.workspace}}/dotnet/imgdoc2Net/readme.md nuget-packaging/docs/
 
           ls -l --recursive nuget-packaging/
           echo "-----------------------------------------------------------"
