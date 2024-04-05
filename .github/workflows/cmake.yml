@@ -183,8 +183,11 @@ jobs:
           # Use sed to replace $version$ with the content of imgdoc2_version_number variable
           imgdoc2_version_number=$(cat ${{github.workspace}}/VersionNumber.txt)
           sed -i 's/\$version\$/'"$imgdoc2_version_number/g" nuget-packaging/imgdoc2.nuspec
-          imgdoc2_icon_for_nuget=${{github.workspace}}/libimgdoc2/doc/images/logo_55x55.png
-          sed -i 's|\$icon\$|'"$imgdoc2_icon_for_nuget"'|g' nuget-packaging/imgdoc2.nuspec
+
+          # Copy the icon file and update the nuspec file
+          mkdir -p nuget-packaging/images
+          cp ${{github.workspace}}/libimgdoc2/doc/images/logo_55x55.png nuget-packaging/images/icon.png
+          sed -i 's|\$icon\$|'"images/icon.png"'|g' nuget-packaging/imgdoc2.nuspec
 
           #ls -l --recursive nuget-packaging/
           cd nuget-packaging
