@@ -191,7 +191,7 @@ jobs:
 
           ls -l --recursive nuget-packaging/
           echo "-----------------------------------------------------------"
-          cat imgdoc2.nuspec
+          cat nuget-packaging/imgdoc2.nuspec
 
           cd nuget-packaging
           nuget pack imgdoc2.nuspec
