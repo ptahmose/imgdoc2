@@ -55,7 +55,7 @@ jobs:
       - name: Build .NET code
         working-directory: ${{github.workspace}}/dotnet
         run: |
-          imgdoc2_version_number=$(cat ../VersionNumber.txt)
+          imgdoc2_version_number="$(cat ../VersionNumber.txt)"
           # TODO(JBL): if adding "--configuration ${{env.BUILD_TYPE}}" (=Release) to the dotnet build command, the build fails. Investigate why.
 
           # note: the version number we read from "VersionNumber.txt" is of the form "Major.Minor.Build" (following semantic versioning). 
@@ -134,7 +134,7 @@ jobs:
         shell: bash
         working-directory: ${{github.workspace}}/dotnet
         run: |
-          imgdoc2_version_number=$(cat ../VersionNumber.txt)
+          imgdoc2_version_number="$(cat ../VersionNumber.txt)"
           # note: the version number we read from "VersionNumber.txt" is of the form "Major.Minor.Build" (following semantic versioning). 
           # We append ".0" to it to make it a valid version number .NET assembly (which traditionally follows a format "Major.Minor.Build.Revision").
           dotnet build --configuration ${{env.BUILD_TYPE}} -p:Version=$imgdoc2_version_number.0
@@ -168,9 +168,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: 'C:/vcpkg/installed'
-          key: vcpkg-x64-windows-
+          key: vcpkg-arm64-windows-
           restore-keys: |
-            vcpkg-x64-windows-
+            vcpkg-arm64-windows-
 
       - name: Install dependencies
         shell: bash
