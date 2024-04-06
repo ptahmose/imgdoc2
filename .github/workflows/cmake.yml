@@ -213,6 +213,7 @@ jobs:
           mkdir nuget-packaging
           mkdir -p nuget-packaging/runtimes/linux-x64/native
           mkdir -p nuget-packaging/runtimes/win-x64/native
+          mkdir -p nuget-packaging/runtimes/win-arm64/native
           cp binaries/imgdoc2API-linux-x64-binaries/libimgdoc2API.so nuget-packaging/runtimes/linux-x64/native/
           cp binaries/imgdoc2API-windows-x64-binaries/imgdoc2API.dll nuget-packaging/runtimes/win-x64/native/
           cp binaries/imgdoc2API-windows-arm64-binaries/imgdoc2API.dll nuget-packaging/runtimes/win-arm64/native/
