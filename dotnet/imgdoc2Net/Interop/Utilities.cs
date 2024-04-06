@@ -16,9 +16,35 @@ namespace ImgDoc2Net.Interop
         /// <returns> True if running on a Linux platform; false otherwise.</returns>
         public static bool IsLinux()
         {
-            // http://stackoverflow.com/a/5117005/358336
-            int p = (int)Environment.OSVersion.Platform;
-            return (p == 4) || (p == 6) || (p == 128);
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+        }
+
+        /// <summary> Gets a value indicating if the current platform is Windows.</summary>
+        ///
+        /// <returns> True if running on a Windows platform; false otherwise.</returns>
+        public static bool IsWindows()
+        {
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        }
+
+        /// <summary> Query if the CPU architecture (of the process that is currently executing) is x64.</summary>
+        /// <returns> True if CPU architecture is x64, false if not.</returns>
+        public static bool IsCpuArchitectureX64()
+        {
+            // Get the process architecture
+            var processArchitecture = RuntimeInformation.ProcessArchitecture;
+
+            return processArchitecture == Architecture.X64;
+        }
+
+        /// <summary> Query if the CPU architecture (of the process that is currently executing) is ARM64.</summary>
+        /// <returns> True if CPU architecture is ARM64, false if not.</returns>
+        public static bool IsCpuArchitectureArm64()
+        {
+            // Get the process architecture
+            var processArchitecture = RuntimeInformation.ProcessArchitecture;
+
+            return processArchitecture == Architecture.Arm64;
         }
 
         /// <brief> 

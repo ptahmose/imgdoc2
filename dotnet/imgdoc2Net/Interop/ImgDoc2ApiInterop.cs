@@ -270,6 +270,13 @@ namespace ImgDoc2Net.Interop
 
         private IEnumerable<string> GetFullyQualifiedDllPaths()
         {
+            // Note: We are looking for the native DLL in the following locations:
+            // - in the same directory as the executing assembly
+            // - in the "runtimes/xxx/native" subdirectory of the executing assembly, where "xxx" is the runtime identifier (c.f. https://learn.microsoft.com/en-us/dotnet/core/rid-catalog)
+            //
+            // Currently, we only support linux-x64, win-x64 and win-arm64.
+            // The Nuget-package contains the native DLLs in the "runtimes" directory. Searching in the same directory is used for development purposes.
+            // 
             // TODO(JBL): I'd like to have CPU-architecture-specific suffixes for the filenames ("x86", "x64", "arm32" etc.) and probably a "d" for debug-builds or so
             string pathOfExecutable = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? string.Empty;
             bool isLinux = Utilities.IsLinux();
@@ -286,9 +293,20 @@ namespace ImgDoc2Net.Interop
 
             yield return Path.Combine(pathOfExecutable, filenameOfBinary);
 
-            if (!isLinux)
+            if (isLinux)
             {
-                yield return Path.Combine(pathOfExecutable, "runtimes/win-x64/native/" + filenameOfBinary);
+                yield return Path.Combine(pathOfExecutable, "runtimes/linux-x64/native/" + filenameOfBinary);
+            }
+            else
+            {
+                if (Utilities.IsCpuArchitectureX64())
+                {
+                    yield return Path.Combine(pathOfExecutable, "runtimes/win-x64/native/" + filenameOfBinary);
+                }
+                else if (Utilities.IsCpuArchitectureArm64())
+                {
+                    yield return Path.Combine(pathOfExecutable, "runtimes/win-arm64/native/" + filenameOfBinary);
+                }
             }
         }
     }
