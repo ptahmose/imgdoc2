@@ -41,13 +41,14 @@ static void ClearAllocationObject(AllocationObject* allocation_object)
 
 static void CopyStringToAllocationObject(const string& str, AllocMemoryFunctionPointer allocate_memory_function, AllocationObject* allocation_object)
 {
+    // get the length of the string including the null terminator
     const size_t size = str.length() + 1;
+
     if (allocate_memory_function != nullptr &&
             allocate_memory_function(size, allocation_object) &&
             allocation_object->pointer_to_memory != nullptr)
     {
         memcpy(allocation_object->pointer_to_memory, str.c_str(), size);
-        //allocation_object->handle = reinterpret_cast<intptr_t>(allocation_object->pointer_to_memory);
     }
     else
     {

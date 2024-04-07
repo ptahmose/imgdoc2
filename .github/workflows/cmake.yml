@@ -240,9 +240,11 @@ jobs:
           # set the ID of the Nuget package - if the secret NUGET_PACKAGE_ID is not set, we use the default value "test-imgdoc2.net"
           if [ -z "${{ secrets.NUGET_PACKAGE_ID }}" ]; then
             echo "NUGET_PACKAGE_ID is not set. Using default value 'test-imgdoc2.net'."
+            # shellcheck disable=SC2236
             sed -i 's/\$id\$/'"test-imgdoc2.net/g" nuget-packaging/imgdoc2.nuspec
           else
             echo "NUGET_PACKAGE_ID is set. Using value '${{ secrets.NUGET_PACKAGE_ID }}'."
+            # shellcheck disable=SC2236
             sed -i 's/\$id\$/'"${{ secrets.NUGET_PACKAGE_ID }}/g" nuget-packaging/imgdoc2.nuspec
           fi
 
@@ -257,10 +259,10 @@ jobs:
 
           # we only push the NuGet package if the NUGETAPI_KEY secret is set AND if the git-tag contains the string "nuget" (case-insensitive)
 
-          if [ ! -z "${{ secrets.NUGETAPI_KEY }}" ]; then
+          if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then
             # Find tags that contain the current HEAD and search for 'nuget' case-insensitively
             TAGS=$(git tag --contains HEAD | grep -i 'nuget')
-            if [ ! -z "$TAGS" ]; then
+            if [ -n "$TAGS" ]; then
               nuget push "*.nupkg" -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
             fi
           fi
