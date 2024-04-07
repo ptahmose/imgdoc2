@@ -2,7 +2,7 @@
 <package >
     <metadata>
         <!-- Required elements -->
-        <id>test-imgdoc2.net</id>
+        <id>$id$</id>
         <version>$version$</version>
         <description>Experimental Data Management for Multi-Dimensional and Tiled 2D- and 3D-Images.</description>
         <authors>ZEISS</authors>
