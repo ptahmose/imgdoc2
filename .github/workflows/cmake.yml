@@ -255,6 +255,6 @@ jobs:
           echo "NuGet package created."
           ls -l
 
-          if [ ! -z "${NUGETAPI_KEY}" ]; then
+          if [ ! -z "${{ secrets.NUGETAPI_KEY }}" ]; then
             nuget push "*.nupkg" -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
           fi
