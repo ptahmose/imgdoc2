@@ -243,7 +243,7 @@ jobs:
             sed -i 's/\$id\$/'"test-imgdoc2.net/g" nuget-packaging/imgdoc2.nuspec
           else
             echo "NUGET_PACKAGE_ID is set. Using value '${{ secrets.NUGET_PACKAGE_ID }}'."
-            sed -i 's/\$id\$/'"${{ secrets.NUGET_PACKAGE_ID }}"/g" nuget-packaging/imgdoc2.nuspec
+            sed -i 's/\$id\$/'"${{ secrets.NUGET_PACKAGE_ID }}/g" nuget-packaging/imgdoc2.nuspec
           fi
 
           ls -l --recursive nuget-packaging/
