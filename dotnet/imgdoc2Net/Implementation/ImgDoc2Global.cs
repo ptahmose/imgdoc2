@@ -8,10 +8,15 @@ namespace ImgDoc2Net.Implementation
     using ImgDoc2Net.Interfaces;
     using ImgDoc2Net.Interop;
 
+    /// <summary> 
+    /// Support functions and other context-free functions are provided by this class.
+    /// </summary>
     public static class ImgDoc2Global
     {
-        private static Lazy<IDecoding> decoder = new Lazy<IDecoding>(() => new Decoding());
+        private static readonly Lazy<IDecoding> Decoder = new Lazy<IDecoding>(() => new Decoding());
 
+        /// <summary> Gets version information.</summary>
+        /// <returns> The version information.</returns>
         public static ImgDoc2VersionInfo GetVersionInfo()
         {
             ImgDoc2NativeLibraryVersionInfo nativeLibraryVersion = ImgDoc2ApiInterop.Instance.GetNativeLibraryVersionInfo();
@@ -23,9 +28,11 @@ namespace ImgDoc2Net.Implementation
             };
         }
 
+        /// <summary> Gets a decoder object.</summary>
+        /// <returns> The decoder object.</returns>
         public static IDecoding GetDecoder()
         {
-            return ImgDoc2Global.decoder.Value;
+            return ImgDoc2Global.Decoder.Value;
         }
     }
 }

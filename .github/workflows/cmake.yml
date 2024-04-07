@@ -255,6 +255,12 @@ jobs:
           echo "NuGet package created."
           ls -l
 
+          # we only push the NuGet package if the NUGETAPI_KEY secret is set AND if the git-tag contains the string "nuget" (case-insensitive)
+
           if [ ! -z "${{ secrets.NUGETAPI_KEY }}" ]; then
-            nuget push "*.nupkg" -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
+            # Find tags that contain the current HEAD and search for 'nuget' case-insensitively
+            TAGS=$(git tag --contains HEAD | grep -i 'nuget')
+            if [ ! -z "$TAGS" ]; then
+              nuget push "*.nupkg" -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
+            fi
           fi
