@@ -9,8 +9,7 @@ FetchContent_Declare(
   libCZI
 #  GIT_REPOSITORY https://github.com/ZEISS/libczi.git
   GIT_REPOSITORY https://github.com/ptahmose/libczi-zeiss.git
-#  GIT_TAG        origin/main
-  GIT_TAG         jbl/update_zstd_to_1_5_6
+  GIT_TAG        origin/main
 )
 
 if(NOT libCZI_POPULATED)
