@@ -226,11 +226,13 @@ jobs:
           imgdoc2_nuget_version_number+="+"
           imgdoc2_nuget_version_number+="$(git rev-parse HEAD)"
           echo "imgdoc2_nuget_version_number: $imgdoc2_nuget_version_number"
+          # shellcheck disable=SC2016
           sed -i 's/\$version\$/'"$imgdoc2_nuget_version_number/g" nuget-packaging/imgdoc2.nuspec
 
           # Copy the icon file and update the nuspec file
           mkdir -p nuget-packaging/images
           cp "${{github.workspace}}/libimgdoc2/doc/images/logo_55x55.png" nuget-packaging/images/icon.png
+          # shellcheck disable=SC2016
           sed -i 's|\$icon\$|'"images/icon.png"'|g' nuget-packaging/imgdoc2.nuspec
 
           # copy the readme file to the docs folder
@@ -240,11 +242,11 @@ jobs:
           # set the ID of the Nuget package - if the secret NUGET_PACKAGE_ID is not set, we use the default value "test-imgdoc2.net"
           if [ -z "${{ secrets.NUGET_PACKAGE_ID }}" ]; then
             echo "NUGET_PACKAGE_ID is not set. Using default value 'test-imgdoc2.net'."
-            # shellcheck disable=SC2236
+            # shellcheck disable=SC2236,SC2016
             sed -i 's/\$id\$/'"test-imgdoc2.net/g" nuget-packaging/imgdoc2.nuspec
           else
             echo "NUGET_PACKAGE_ID is set. Using value '${{ secrets.NUGET_PACKAGE_ID }}'."
-            # shellcheck disable=SC2236
+            # shellcheck disable=SC2236,SC2016
             sed -i 's/\$id\$/'"${{ secrets.NUGET_PACKAGE_ID }}/g" nuget-packaging/imgdoc2.nuspec
           fi
 
