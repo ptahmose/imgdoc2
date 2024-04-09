@@ -280,7 +280,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Nuget
-          path: *.nupkg
+          path: ./*.nupkg
 
       - name: Deploy to NuGet
         if: steps.check_message.outputs.should_deploy == 'true'
