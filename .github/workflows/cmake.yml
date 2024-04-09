@@ -91,6 +91,7 @@ jobs:
           fail_ci_if_error: false
           directory: ${{github.workspace}}/coverage_libimgdoc2
           files: code_coverage_gcovr_xml.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
       - name: Upload coverage reports for imgdoc2Net to Codecov
@@ -99,6 +100,7 @@ jobs:
           fail_ci_if_error: false
           directory: ${{github.workspace}}/coverage_imgdoc2net
           files: coverage.cobertura.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
   build-windows-x64:
