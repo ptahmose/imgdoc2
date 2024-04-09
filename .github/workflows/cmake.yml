@@ -207,9 +207,8 @@ jobs:
         with:
           path: binaries/
 
-      - name: Test
+      - name: Package NuGet and Push
         run: |
-          ls -l --recursive binaries/
           # We organize the native binaries in a way that they can be packed into a NuGet package. We follow this convention for the folder structure:
           # runtimes/<RID>/native, where <RID> is the Runtime Identifier for the target platform.
           mkdir nuget-packaging
@@ -259,7 +258,6 @@ jobs:
           cd nuget-packaging
           nuget pack imgdoc2.nuspec
           echo "NuGet package created."
-          #ls -l
 
           # we only push the NuGet package if the NUGETAPI_KEY secret is set AND if the git-tag contains the string "nuget" (case-insensitive)
           if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then

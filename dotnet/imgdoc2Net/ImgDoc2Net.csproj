@@ -13,8 +13,11 @@
         <Product>imgdoc2</Product>
         <Company>Carl Zeiss Microscopy GmbH</Company>
         <Copyright>Copyright 2023-2024 Carl Zeiss Microscopy GmbH</Copyright>
-        <!-- Note: version number is passed to msbuild ("-p:Version=...") and goes into the assembly's
-                   attributes AssemblyVersion, FileVersion and AssemblyInformationalVersion -->
+        <!-- Note: Version number is passed to msbuild ("-p:Version=...") and goes into the assembly's
+                   attributes AssemblyVersion, FileVersion and AssemblyInformationalVersion. The version  
+                   from the msbuild-command-line will overwrite what is given here. So, the version number
+                   given here indicates a local build. -->
+        <AssemblyVersion>99.99.99.99</AssemblyVersion>
     </PropertyGroup>
 
     <!-- This has the following purpose: If native DLLs are present in the folder "native_dlls" next to the project file,

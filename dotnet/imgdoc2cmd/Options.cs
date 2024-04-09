@@ -288,6 +288,8 @@ command ""PrintInformation"":
             text += $"repository: {versionInfo.NativeLibraryVersion.RepositoryUrl}\n";
             text += $"branch: {versionInfo.NativeLibraryVersion.RepositoryBranch}\n";
             text += $"tag: {versionInfo.NativeLibraryVersion.RepositoryTag}\n";
+            text += $"\n\nversion of managed imgdoc2 library:\nversion: {versionInfo.ManagedImgDoc2LibraryVersionInfo.Major}.{versionInfo.ManagedImgDoc2LibraryVersionInfo.Minor}.{versionInfo.ManagedImgDoc2LibraryVersionInfo.Patch}.{versionInfo.ManagedImgDoc2LibraryVersionInfo.Revision}\n";
+            text += $"build type: {versionInfo.ManagedImgDoc2LibraryVersionInfo.BuildType}\n";
 
             return text;
         }

@@ -5,6 +5,7 @@
 namespace ImgDoc2Net.Implementation
 {
     using System;
+    using System.Reflection;
     using ImgDoc2Net.Interfaces;
     using ImgDoc2Net.Interop;
 
@@ -20,11 +21,28 @@ namespace ImgDoc2Net.Implementation
         public static ImgDoc2VersionInfo GetVersionInfo()
         {
             ImgDoc2NativeLibraryVersionInfo nativeLibraryVersion = ImgDoc2ApiInterop.Instance.GetNativeLibraryVersionInfo();
-            var versionInfo = new ImgDoc2VersionInfo();
+
+            // Get the currently executing assembly
+            Assembly assembly = Assembly.GetExecutingAssembly();
+
+            // Get the version of the assembly
+            Version managedVersion = assembly.GetName().Version;
+
             return new ImgDoc2VersionInfo
             {
                 NativeLibraryVersion = nativeLibraryVersion,
-                ManagedImgDoc2LibraryVersionInfo = "1.2.3",
+                ManagedImgDoc2LibraryVersionInfo = new ImgDoc2ManagedLibraryVersionInfo()
+                {
+                    Major = managedVersion.Major,
+                    Minor = managedVersion.Minor,
+                    Patch = managedVersion.Build,
+                    Revision = managedVersion.Revision,
+#if DEBUG
+                    BuildType = "Debug",
+#else
+                    BuildType = "Release",
+#endif
+                },
             };
         }
 

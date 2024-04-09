@@ -5,8 +5,6 @@
 namespace ImgDoc2Net.Implementation
 {
     using System;
-    using System.Collections.Generic;
-    using System.Text;
     using ImgDoc2Net.Interfaces;
     using ImgDoc2Net.Interop;
 
