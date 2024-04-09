@@ -14,7 +14,7 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build-linux:
+  build-linux-x64:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
@@ -73,7 +73,7 @@ jobs:
           cp ${{github.workspace}}/dotnet/native_dlls/libimgdoc2API.so .
 
       - name: Upload Linux-x64 Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: imgdoc2API-linux-x64-binaries
           path: ${{github.workspace}}/imgdoc2API-binaries
@@ -153,7 +153,7 @@ jobs:
           #cp ${{github.workspace}}/dotnet/imgdoc2Net/imgdoc2.nuspec .
 
       - name: Upload Windows-x64 Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: imgdoc2API-windows-x64-binaries
           path: ${{github.workspace}}/imgdoc2API-binaries
@@ -190,14 +190,14 @@ jobs:
           cp ${{github.workspace}}/build/imgdoc2API/Release/imgdoc2API.dll .
 
       - name: Upload Windows-arm64 Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: imgdoc2API-windows-arm64-binaries
           path: ${{github.workspace}}/imgdoc2API-binaries
 
 
   package:
-    needs: [build-windows-x64, build-linux, build-windows-arm64]
+    needs: [build-windows-x64, build-linux-x64, build-windows-arm64]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -263,7 +263,9 @@ jobs:
 
           if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then
             # Find tags that contain the current HEAD and search for 'nuget' case-insensitively
-            TAGS=$(git tag --contains HEAD | grep -i 'nuget')
+            # Note: The '|| true' is necessary to prevent the script from failing if no tags are found. In that case, the variable TAGS will be empty.
+            #       Without '|| true', the script would fail because grep's return code would be non-zero.
+            TAGS=$(git tag --contains HEAD | grep -i 'nuget' || true)
             if [ -n "$TAGS" ]; then
               echo "Found 'NuGet' tag. Pushing the NuGet package."
               nuget push "*.nupkg" -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
