@@ -201,13 +201,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+ 
       - name: Download All Binaries
         uses: actions/download-artifact@v2
         with:
           path: binaries/
+
       - name: Test
         run: |
-          #ls -l --recursive binaries/
+          ls -l --recursive binaries/
           # We organize the native binaries in a way that they can be packed into a NuGet package. We follow this convention for the folder structure:
           # runtimes/<RID>/native, where <RID> is the Runtime Identifier for the target platform.
           mkdir nuget-packaging
@@ -250,17 +252,16 @@ jobs:
             sed -i 's/\$id\$/'"${{ secrets.NUGET_PACKAGE_ID }}/g" nuget-packaging/imgdoc2.nuspec
           fi
 
-          ls -l --recursive nuget-packaging/
-          echo "-----------------------------------------------------------"
-          cat nuget-packaging/imgdoc2.nuspec
+          #ls -l --recursive nuget-packaging/
+          #echo "-----------------------------------------------------------"
+          #cat nuget-packaging/imgdoc2.nuspec
 
           cd nuget-packaging
           nuget pack imgdoc2.nuspec
           echo "NuGet package created."
-          ls -l
+          #ls -l
 
           # we only push the NuGet package if the NUGETAPI_KEY secret is set AND if the git-tag contains the string "nuget" (case-insensitive)
-
           if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then
             # Find tags that contain the current HEAD and search for 'nuget' case-insensitively
             # Note: The '|| true' is necessary to prevent the script from failing if no tags are found. In that case, the variable TAGS will be empty.
