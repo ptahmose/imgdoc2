@@ -86,7 +86,7 @@ jobs:
           make code_coverage_gcovr_xml
 
       - name: Upload coverage reports for libimgdoc2 to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: false
           directory: ${{github.workspace}}/coverage_libimgdoc2
@@ -94,7 +94,7 @@ jobs:
           verbose: true
 
       - name: Upload coverage reports for imgdoc2Net to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: false
           directory: ${{github.workspace}}/coverage_imgdoc2net
@@ -282,7 +282,7 @@ jobs:
         with:
           name: Nuget
           path: |
-            ./*.nupkg
+            ${{github.workspace}}/nuget-packaging/*.nupkg
 
       - name: Deploy to NuGet
         if: steps.check_message.outputs.should_deploy == 'true'
