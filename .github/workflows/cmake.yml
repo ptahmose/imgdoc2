@@ -271,6 +271,7 @@ jobs:
             #checkov:skip=CKV_GHA_2:Check disabled due to controlled usage of commit messages, which are trusted in this context.
             COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
             COMMIT_MESSAGE_LOWER="$(echo "$COMMIT_MESSAGE" | awk '{print tolower($0)}')"
+            # shellcheck disable=SC2086
             if [[ "$COMMIT_MESSAGE_LOWER" == *"[deploy-nuget]"* ]]; then
               echo "should_deploy=true" >> $GITHUB_OUTPUT
             else
