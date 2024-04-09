@@ -207,7 +207,7 @@ jobs:
         with:
           path: binaries/
 
-      - name: Package NuGet and Push
+      - name: Package NuGet
         run: |
           # We organize the native binaries in a way that they can be packed into a NuGet package. We follow this convention for the folder structure:
           # runtimes/<RID>/native, where <RID> is the Runtime Identifier for the target platform.
@@ -258,17 +258,31 @@ jobs:
           cd nuget-packaging
           nuget pack imgdoc2.nuspec
           echo "NuGet package created."
+        shell: bash
 
-          # we only push the NuGet package if the NUGETAPI_KEY secret is set AND if the git-tag contains the string "nuget" (case-insensitive)
+      - name: Check commit message
+        id: check_message
+        run: |
+          # we only push the NuGet package if the NUGETAPI_KEY secret is set AND if the commit-message contains the
+          # string "[deploy-nuget]" (case-insensitive)
           if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then
-            # Find tags that contain the current HEAD and search for 'nuget' case-insensitively
-            # Note: The '|| true' is necessary to prevent the script from failing if no tags are found. In that case, the variable TAGS will be empty.
-            #       Without '|| true', the script would fail because grep's return code would be non-zero.
-            TAGS=$(git tag --contains HEAD | grep -i 'nuget' || true)
-            if [ -n "$TAGS" ]; then
-              echo "Found 'NuGet' tag. Pushing the NuGet package."
-              nuget push "*.nupkg" -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
+            COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+            COMMIT_MESSAGE_LOWER=$(echo "$COMMIT_MESSAGE" | awk '{print tolower($0)}')
+            if [[ "$COMMIT_MESSAGE_LOWER" == *"[deploy-nuget]"* ]]; then
+              echo "::set-output name=should_deploy::true"
             else
-              echo "No 'NuGet' tag found. Not pushing the NuGet package."
+              echo "::set-output name=should_deploy::false"
             fi
           fi
+        shell: bash
+
+      - name: Upload Nuget
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nuget
+          path: *.nupkg
+
+      - name: Deploy to NuGet
+        if: steps.check_message.outputs.should_deploy == 'true'
+        run: |
+          nuget push "*.nupkg" -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
