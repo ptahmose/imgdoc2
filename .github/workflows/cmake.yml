@@ -265,6 +265,9 @@ jobs:
             # Find tags that contain the current HEAD and search for 'nuget' case-insensitively
             TAGS=$(git tag --contains HEAD | grep -i 'nuget')
             if [ -n "$TAGS" ]; then
+              echo "Found 'NuGet' tag. Pushing the NuGet package."
               nuget push "*.nupkg" -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
+            else
+              echo "No 'NuGet' tag found. Not pushing the NuGet package."
             fi
           fi
