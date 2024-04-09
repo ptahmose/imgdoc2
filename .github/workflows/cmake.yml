@@ -266,6 +266,7 @@ jobs:
           # we only push the NuGet package if the NUGETAPI_KEY secret is set AND if the commit-message contains the
           # string "[deploy-nuget]" (case-insensitive)
           if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then
+            #checkov:skip=CKV_GHA_2:Check disabled due to controlled usage of commit messages, which are trusted in this context.
             COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
             COMMIT_MESSAGE_LOWER=$(echo "$COMMIT_MESSAGE" | awk '{print tolower($0)}')
             if [[ "$COMMIT_MESSAGE_LOWER" == *"[deploy-nuget]"* ]]; then
