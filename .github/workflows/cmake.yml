@@ -269,9 +269,9 @@ jobs:
             COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
             COMMIT_MESSAGE_LOWER=$(echo "$COMMIT_MESSAGE" | awk '{print tolower($0)}')
             if [[ "$COMMIT_MESSAGE_LOWER" == *"[deploy-nuget]"* ]]; then
-              echo "::set-output name=should_deploy::true"
+              echo "should_deploy=true" >> $GITHUB_OUTPUT
             else
-              echo "::set-output name=should_deploy::false"
+              echo "should_deploy=false" >> $GITHUB_OUTPUT
             fi
           fi
         shell: bash
