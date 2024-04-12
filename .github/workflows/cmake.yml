@@ -265,7 +265,7 @@ jobs:
           BRANCH_NAME: ${{ github.ref }}
         run: |
           # we only push the NuGet package if
-          # * the NUGETAPI_KEY secret is set 
+          # * the NUGETAPI_KEY secret is set
           # * AND the commit-message contains the string "[deploy-nuget]" (case-insensitive)
           # * AND we are on the main branch
           if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then
