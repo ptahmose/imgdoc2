@@ -12,6 +12,7 @@ cmake_policy(SET CMP0079 NEW) # necessary to make coverage build work, not sure 
 
 include(FetchContent)
 
+# we read the version number from a file
 file (STRINGS "VersionNumber.txt" IMGDOC2_VERSION_NUMBER)
 
 project("imgdoc2"
@@ -88,16 +89,12 @@ if (IMGDOC2_BUILD_NATIVEIMGDOC2CMD)
 endif()
 
 if (IMGDOC2_BUILD_CONVCZI)
-#  include("${CMAKE_SOURCE_DIR}/cmake/libCZI.cmake")
-#  FetchContent_GetProperties(libCZI)
-#  set(LIBCZI_INCLUDE_DIR "${libczi_SOURCE_DIR}/Src/libCZI")
   add_subdirectory(convczi)
 endif()
 
 include (CTest)
 set(MEMORYCHECK_COMMAND valgrind)
-#set(MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --track-origins=yes")
-set(MEMORYCHECK_COMMAND_OPTIONS "--leak-check=yes")
+set(MEMORYCHECK_COMMAND_OPTIONS "--leak-check=yes") # check https://valgrind.org/docs/manual/manual-core.html#manual-core.options for more options
 if (IMGDOC2_BUILD_UNITTESTS) 
   enable_testing()
   add_subdirectory(libimgdoc2_tests)

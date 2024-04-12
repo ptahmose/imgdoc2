@@ -52,3 +52,4 @@ libimgdoc2/doxygen
 cmake-build-debug/
 megalinter-reports/
 imgdoc2API/doxygen
+CMakeSettings.json
