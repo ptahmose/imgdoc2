@@ -1,6 +1,6 @@
-﻿// SPDX-FileCopyrightText: 2023 Carl Zeiss Microscopy GmbH
+﻿// SPDX-FileCopyrightText: 2024 Carl Zeiss Microscopy GmbH
 //
-// SPDX-License-Identifier: MITusing System.Threading.Tasks;
+// SPDX-License-Identifier: MIT
 
 namespace ImgDoc2Net_UnitTests
 {
