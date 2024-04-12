@@ -252,18 +252,14 @@ jobs:
             # shellcheck disable=SC2236,SC2016
             sed -i 's/\$id\$/'"${{ secrets.NUGET_PACKAGE_ID }}/g" nuget-packaging/imgdoc2.nuspec
           fi
-
-          #ls -l --recursive nuget-packaging/
-          #echo "-----------------------------------------------------------"
-          #cat nuget-packaging/imgdoc2.nuspec
-
+          
           cd nuget-packaging
           nuget pack imgdoc2.nuspec
           echo "NuGet package created."
         shell: bash
 
-      - name: Check commit message
-        id: check_message
+      - name: determine whether to deploy NuGet package to nuget.org
+        id: check_whether_to_deploy_nuget
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }} # see https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions, this is required to prevent script injections
         run: |
@@ -274,20 +270,23 @@ jobs:
             # shellcheck disable=SC2086
             if [[ "$COMMIT_MESSAGE_LOWER" == *"[deploy-nuget]"* ]]; then
               echo "should_deploy=true" >> $GITHUB_OUTPUT
+              echo "Deploy NuGet package to nuget.org."
             else
               echo "should_deploy=false" >> $GITHUB_OUTPUT
+              echo "DO NOT deploy NuGet package to nuget.org."
             fi
           fi
         shell: bash
 
-      - name: Upload Nuget
+      - name: Upload Nuget as artifact
         uses: actions/upload-artifact@v4
         with:
           name: Nuget
           path: |
             ${{github.workspace}}/nuget-packaging/*.nupkg
 
+      # if we determined that we should deploy the NuGet package (in the check_whether_to_deploy_nuget step), we push it to nuget.org
       - name: Deploy to NuGet
-        if: steps.check_message.outputs.should_deploy == 'true'
+        if: steps.check_whether_to_deploy_nuget.outputs.should_deploy == 'true'
         run: |
           nuget push "*.nupkg" -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGETAPI_KEY }}
