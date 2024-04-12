@@ -252,7 +252,7 @@ jobs:
             # shellcheck disable=SC2236,SC2016
             sed -i 's/\$id\$/'"${{ secrets.NUGET_PACKAGE_ID }}/g" nuget-packaging/imgdoc2.nuspec
           fi
-          
+
           cd nuget-packaging
           nuget pack imgdoc2.nuspec
           echo "NuGet package created."
