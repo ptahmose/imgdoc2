@@ -269,7 +269,7 @@ jobs:
           # * AND if the commit-message contains the string "[deploy-nuget]" (case-insensitive)
           # * AND if we are on the main branch
           if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then
-            if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            if [[ "$BRANCH_NAME" == "refs/heads/main" ]]; then
               COMMIT_MESSAGE_LOWER="$(echo "$COMMIT_MESSAGE" | awk '{print tolower($0)}')"
               # shellcheck disable=SC2086
               if [[ "$COMMIT_MESSAGE_LOWER" == *"[deploy-nuget]"* ]]; then
