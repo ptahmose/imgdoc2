@@ -264,12 +264,12 @@ jobs:
 
       - name: Check commit message
         id: check_message
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }} # see https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions, this is required to prevent script injections
         run: |
           # we only push the NuGet package if the NUGETAPI_KEY secret is set AND if the commit-message contains the
           # string "[deploy-nuget]" (case-insensitive)
           if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then
-            #checkov:skip=CKV_GHA_2:Check disabled due to controlled usage of commit messages, which are trusted in this context.
-            COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
             COMMIT_MESSAGE_LOWER="$(echo "$COMMIT_MESSAGE" | awk '{print tolower($0)}')"
             # shellcheck disable=SC2086
             if [[ "$COMMIT_MESSAGE_LOWER" == *"[deploy-nuget]"* ]]; then
