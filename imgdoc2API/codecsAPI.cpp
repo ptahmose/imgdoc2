@@ -98,7 +98,7 @@ ImgDoc2ErrorCode DecodeImage(
     {
         if (destination_stride < bitmap_info->pixelWidth * libCZI::Utils::GetBytesPerPixel(ConvertToLibCziPixelType(bitmap_info->pixelType)))
         {
-            ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("destination_stride", "must be either be zero (which means that the stride is choosen by this function) greater than or equal to pixelWidth * bytes per pixel", error_information);
+            ImgDoc2ApiSupport::FillOutErrorInformationForInvalidArgument("destination_stride", "must be either be zero (which means that the stride is chosen by this function) or greater than or equal to pixelWidth * bytes per pixel", error_information);
             return ImgDoc2_ErrorCode_InvalidArgument;
         }
     }
