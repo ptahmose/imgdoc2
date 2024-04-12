@@ -73,8 +73,9 @@ typedef bool(LIBIMGDOC2_STDCALL* AllocMemoryFunctionPointer)(std::uint64_t size,
 /// If the allocate_memory_function is null, then the strings will not be returned.
 ///
 /// \param [out]    version_info                Structure where the version information will be placed.
-/// \param          allocate_memory_function    If non-null, the allocate memory function.will be used to allocate memory for the strings in the VersionInfoInterop structure
-///                                             to be returned.
+/// \param          allocate_memory_function    If non-null, this "allocate memory function" will be used to allocate memory for the strings in the VersionInfoInterop structure
+///  
+/// \returns An error-code indicating success or failure of the operation.                                                                                       to be returned.
 EXTERNAL_API(ImgDoc2ErrorCode) GetVersionInfo(VersionInfoInterop* version_info, AllocMemoryFunctionPointer allocate_memory_function);
 
 /// Retrieve the 'ImgDoc2StatisticsInterop' structure, which contains various statistics about

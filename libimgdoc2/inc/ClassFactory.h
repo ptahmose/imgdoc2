@@ -19,6 +19,9 @@ namespace imgdoc2
     class ClassFactory
     {
     public:
+        /// Gets built-time information about the libimgdoc2 library.
+        ///
+        /// \returns    The version information.
         static VersionInfo GetVersionInfo();
 
         /// Creates an options-object for creating a new imgdoc2-document.

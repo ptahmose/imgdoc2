@@ -137,56 +137,6 @@ configure_file (
   "${CMAKE_CURRENT_BINARY_DIR}/libimgdoc2_config.h"
   ESCAPE_QUOTES @ONLY)
 
-  # Add a custom command that generates a header file with the compiler options
-
-# Add a custom command that generates a header file with the compiler options.
-# This time, we'll handle the escaping more carefully.
-#[[
-add_custom_command(
-    TARGET libimgdoc2 PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo_append "#ifndef COMPILER_OPTIONS_H" > ${CMAKE_BINARY_DIR}/compiler_options.h
-    COMMAND ${CMAKE_COMMAND} -E echo_append "#define COMPILER_OPTIONS_H" >> ${CMAKE_BINARY_DIR}/compiler_options.h
-    COMMAND ${CMAKE_COMMAND} -E echo_append "#define COMPILER_OPTIONS \"" >> ${CMAKE_BINARY_DIR}/compiler_options.h
-    # Double $ to escape for Ninja
-    COMMAND ${CMAKE_COMMAND} -E echo_append "$$<$<BOOL:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_OPTIONS>>:$$<JOIN:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_OPTIONS>,\\\\n\\\\>>" >> ${CMAKE_BINARY_DIR}/compiler_options.h
-    COMMAND ${CMAKE_COMMAND} -E echo_append "\\n$$<$<BOOL:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_DEFINITIONS>>:$$<JOIN:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_DEFINITIONS>,\\\\n\\\\>>\"" >> ${CMAKE_BINARY_DIR}/compiler_options.h
-    COMMAND ${CMAKE_COMMAND} -E echo "#endif // COMPILER_OPTIONS_H" >> ${CMAKE_BINARY_DIR}/compiler_options.h
-)
-
-add_custom_command(
-    TARGET libimgdoc2 PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo_append "$$<$<BOOL:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_OPTIONS>>:$$<JOIN:$$<TARGET_PROPERTY:libimgdoc2,COMPILE_OPTIONS>,\\\\n\\\\>>" > ${CMAKE_CURRENT_BINARY_DIR}/compiler_options.h
-)
-#]]
-
-# Path to the output header
-#set(compiler_options_header "${CMAKE_CURRENT_BINARY_DIR}/compiler_options.h")
-#[[
-add_custom_command(
-    OUTPUT ${compiler_options_header}
-    COMMAND ${CMAKE_COMMAND} -DARGS="libimgdoc2;${compiler_options_header}" -P ${CMAKE_SOURCE_DIR}/cmake/generate_compiler_options.cmake
-#    DEPENDS libimgdoc2
-    COMMENT "Generating compiler options header"
-)
-#]]
-#[[
-add_custom_command(
-    OUTPUT ${compiler_options_header}
-    COMMAND ${CMAKE_COMMAND} 
-        -DOUTPUT_FILE=${compiler_options_header} 
-        -DCOMPILE_OPTIONS="${my_compile_options}" 
-        -DCOMPILE_DEFINITIONS="${my_compile_definitions}"
-        -P ${CMAKE_SOURCE_DIR}/cmake/generate_compiler_options.cmake
-    COMMENT "Generating compiler options header"
-)
-
-
-# Ensure my_executable depends on the generated header
-add_custom_target(generate_compiler_options DEPENDS ${compiler_options_header})
-add_dependencies(libimgdoc2 generate_compiler_options)
-#]]
-
-
 ######################################################################################################
 
 # shared libraries need PIC

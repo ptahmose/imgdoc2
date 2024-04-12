@@ -9,11 +9,12 @@
 
 namespace imgdoc2
 {
+    /// This structure gathers build-time information about the version of the library.
     struct VersionInfo
     {
-        std::uint32_t major{ 0 };
-        std::uint32_t minor{ 0 };;
-        std::uint32_t patch{ 0 };;
+        std::uint32_t major{ 0 };   ///< The major version number. We use the semantic versioning scheme (https://semver.org/).
+        std::uint32_t minor{ 0 };   ///< The minor version number. We use the semantic versioning scheme (https://semver.org/).
+        std::uint32_t patch{ 0 };   ///< The patch version number. We use the semantic versioning scheme (https://semver.org/).
 
         /// The compiler identification. This is a free-form string.
         std::string compiler_identification;

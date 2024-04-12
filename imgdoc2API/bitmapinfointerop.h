@@ -1,7 +1,6 @@
-// SPDX-FileCopyrightText: 2024 Carl Zeiss Microscopy GmbH
-//
-// SPDX-License-Identifier: MIT
-
+/// SPDX-FileCopyrightText: 2024 Carl Zeiss Microscopy GmbH
+/// 
+/// SPDX-License-Identifier: MIT
 #pragma once
 
 #pragma pack(push, 4)
