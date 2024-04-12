@@ -266,8 +266,8 @@ jobs:
         run: |
           # we only push the NuGet package if
           # * the NUGETAPI_KEY secret is set 
-          # * AND if the commit-message contains the string "[deploy-nuget]" (case-insensitive)
-          # * AND if we are on the main branch
+          # * AND the commit-message contains the string "[deploy-nuget]" (case-insensitive)
+          # * AND we are on the main branch
           if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then
             if [[ "$BRANCH_NAME" == "refs/heads/main" ]]; then
               COMMIT_MESSAGE_LOWER="$(echo "$COMMIT_MESSAGE" | awk '{print tolower($0)}')"
