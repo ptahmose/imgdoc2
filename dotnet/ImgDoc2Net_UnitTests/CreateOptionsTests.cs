@@ -79,7 +79,7 @@ namespace ImgDoc2Net_UnitTests
 
             var dimensions = instance.CreateOptionsGetDimensions(handle);
 
-            Assert.True(dimensions.Length == 2);
+            Assert.Equal(2, dimensions.Length);
             Assert.Contains(new Dimension('A'), dimensions);
             Assert.Contains(new Dimension('B'), dimensions);
             instance.DestroyCreateOptions(handle);
@@ -95,7 +95,7 @@ namespace ImgDoc2Net_UnitTests
 
             var dimensions = instance.CreateOptionsGetIndexedDimensions(handle);
 
-            Assert.True(dimensions.Length == 2);
+            Assert.Equal(2, dimensions.Length);
             Assert.Contains(new Dimension('C'), dimensions);
             Assert.Contains(new Dimension('P'), dimensions);
             instance.DestroyCreateOptions(handle);
