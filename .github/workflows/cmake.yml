@@ -273,12 +273,13 @@ jobs:
           if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then
             if [[ "$BRANCH_NAME" == "refs/heads/main" ]]; then
               COMMIT_MESSAGE_LOWER="$(echo "$COMMIT_MESSAGE" | awk '{print tolower($0)}')"
-              # shellcheck disable=SC2086
+              # shellcheck disable=SC2086,SC2086
               if [[ "$COMMIT_MESSAGE_LOWER" == *"[deploy-nuget]"* ]]; then
                 should_deploy=true
               fi
             fi
           fi
+          # shellcheck disable=SC2086,SC2086
           if [ "$should_deploy" == "true" ]; then
               echo "should_deploy=true" >> $GITHUB_OUTPUT
               echo "Deploy NuGet package to nuget.org."
