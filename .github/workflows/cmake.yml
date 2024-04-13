@@ -268,18 +268,23 @@ jobs:
           # * the NUGETAPI_KEY secret is set
           # * AND the commit-message contains the string "[deploy-nuget]" (case-insensitive)
           # * AND we are on the main branch
+          echo "COMMIT_MESSAGE: $COMMIT_MESSAGE"
+          should_deploy=false
           if [ -n "${{ secrets.NUGETAPI_KEY }}" ]; then
             if [[ "$BRANCH_NAME" == "refs/heads/main" ]]; then
               COMMIT_MESSAGE_LOWER="$(echo "$COMMIT_MESSAGE" | awk '{print tolower($0)}')"
               # shellcheck disable=SC2086
               if [[ "$COMMIT_MESSAGE_LOWER" == *"[deploy-nuget]"* ]]; then
-                echo "should_deploy=true" >> $GITHUB_OUTPUT
-                echo "Deploy NuGet package to nuget.org."
-              else
-                echo "should_deploy=false" >> $GITHUB_OUTPUT
-                echo "DO NOT deploy NuGet package to nuget.org."
+                should_deploy=true
               fi
             fi
+          fi
+          if [ $should_deploy == "true" ]; then
+              echo "should_deploy=true" >> $GITHUB_OUTPUT
+              echo "Deploy NuGet package to nuget.org."
+          else
+              echo "should_deploy=false" >> $GITHUB_OUTPUT
+              echo "DO NOT deploy NuGet package to nuget.org."
           fi
         shell: bash
 
