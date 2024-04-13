@@ -279,7 +279,7 @@ jobs:
               fi
             fi
           fi
-          if [ $should_deploy == "true" ]; then
+          if [ "$should_deploy" == "true" ]; then
               echo "should_deploy=true" >> $GITHUB_OUTPUT
               echo "Deploy NuGet package to nuget.org."
           else
